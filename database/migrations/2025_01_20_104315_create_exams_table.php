@@ -14,8 +14,11 @@ class CreateExamsTable extends Migration
     public function up()
     {
         Schema::create('exams', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
+            $table->id(); // Primary key
+            $table->string('name'); // Name of the exam
+            $table->text('description')->nullable(); // Description of the exam
+            $table->boolean('is_active')->default(true); // Status of the exam (active/inactive)
+            $table->timestamps(); // Created_at and Updated_at
         });
     }
 
