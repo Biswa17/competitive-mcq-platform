@@ -13,9 +13,6 @@ class Controller extends BaseController
     public function response($data,$status,$message='',$other=array())
     {
     	$response = array();
-        //$data = checkEnv($data);
-        //$data['cdn_path'] = \Config::get('mgl.cdn_path');
-        // p($data);
         if($status==200)
     	{
     		$response = array('status'=>'success','status_code'=>$status,'message'=>$message,'response'=>$data);
