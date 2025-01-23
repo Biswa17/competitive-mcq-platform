@@ -22,7 +22,7 @@ class VerifyUserToken
                 'status' => 'error',
                 'status_code' => 401,
                 'message' => 'Your token has expired. Please log in again.',
-                'response' => null,
+                'response' => [],
             ];
             return response()->json($response, 401);
         } catch (TokenInvalidException $e) {
@@ -30,7 +30,7 @@ class VerifyUserToken
                 'status' => 'error',
                 'status_code' => 401,
                 'message' => 'Your token is invalid.',
-                'response' => null,
+                'response' => [],
             ];
             return response()->json($response, 401);
         } catch (Exception $e) {
@@ -38,7 +38,7 @@ class VerifyUserToken
                 'status' => 'error',
                 'status_code' => 401,
                 'message' => 'Token is missing or unauthorized.',
-                'response' => null,
+                'response' => [],
             ];
             return response()->json($response, 401);
         }

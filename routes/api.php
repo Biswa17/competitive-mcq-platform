@@ -14,21 +14,10 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+
+Route::group(['namespace'=>'\App\Http\Controllers\Auth','prefix'=>'auth','middleware'=>['api']],function(){
+    Route::post('register', 'AuthController@register');
+    Route::post('login', 'AuthController@login');
+    Route::post('logout', 'AuthController@logout')->middleware('verifyusertoken');
 });
-
-
-use App\Http\Controllers\Auth\UserController;
-
-Route::post('register', [UserController::class, 'register']);
-Route::post('login', [UserController::class, 'login']);
-
-// Protect the user route with auth:api middleware
-Route::middleware('auth:api')->get('user', [UserController::class, 'getUserDetails']);
-
-use App\Http\Controllers\Auth\AuthController;
-
-Route::post('/auth/login', [AuthController::class, 'login']);
-Route::post('/auth/logout', [AuthController::class, 'logout'])->middleware('verifyusertoken');
 
