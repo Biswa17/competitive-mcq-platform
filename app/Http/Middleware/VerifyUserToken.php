@@ -14,6 +14,18 @@ class VerifyUserToken
         try {
             // Attempt to authenticate the token
             $user = JWTAuth::parseToken()->authenticate();
+            
+            if (!in_array($request->route()->getName(), ['logout', 'register_details'])) {
+                if ($user->is_new_user) {
+                    $response = [
+                        'status' => 'error',
+                        'status_code' => 403,
+                        'message' => 'Please update your profile to access this resource.',
+                        'response' => [],
+                    ];
+                    return response()->json($response, 403);
+                }
+            }
 
             // Attach user ID to the request
             $request->merge(['token_id' => $user->id]);

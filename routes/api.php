@@ -16,11 +16,12 @@ use Illuminate\Support\Facades\Route;
 
 
 Route::group(['namespace'=>'\App\Http\Controllers\Auth','prefix'=>'auth','middleware'=>['api']],function(){
-    Route::post('register', 'AuthController@register');
-    Route::post('login', 'AuthController@login');
-    Route::post('logout', 'AuthController@logout')->middleware('verifyusertoken');
-
+    Route::post('logout', 'AuthController@logout')->middleware('verifyusertoken')->name('logout');
     Route::post('generate_otp', 'AuthController@generateOtp');
     Route::post('verify_otp', 'AuthController@verifyOtp');
+    Route::post('register_details', 'UserController@registerUser')->middleware('verifyusertoken')->name('register_details');
 });
 
+Route::group(['namespace'=>'\App\Http\Controllers\StoreFront','prefix'=>'user','middleware'=>['api']],function(){
+    Route::get('details', 'UserController@getUserDetails')->middleware('verifyusertoken');
+});
