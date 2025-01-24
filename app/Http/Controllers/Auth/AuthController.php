@@ -8,6 +8,9 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Facades\Auth;
 use Validator;
 use App\Models\User;
+use Illuminate\Support\Facades\Hash;
+use App\Models\UserOtp;
+use Carbon\Carbon;
 
 
 class AuthController extends Controller
@@ -41,8 +44,8 @@ class AuthController extends Controller
                 ]);
 
                 // Generate API token for the new user
-                $token = $user->createToken('YourAppName')->accessToken;
-
+                $token = JWTAuth::fromUser($user);
+            
                 $response = [
                     'user' => $user,
                     'token' => $token,
@@ -136,4 +139,136 @@ class AuthController extends Controller
         // Return response
         return $this->response($response, $status, $msg);
     }
+
+    public function generateOtp(Request $request)
+    {
+        // Validate the phone number
+        $rules = [
+            'phone_number' => 'required|string|max:10',
+        ];
+        $validator = Validator::make($request->all(), $rules);
+
+        if ($validator->fails()) {
+            $response = $validator->errors();
+            $msg = 'Validation Errors';
+            $status = 422;
+        } else {
+            try {
+                // Check if the user exists
+                $user = User::where('phone_number', $request->phone_number)->first();
+
+                if (!$user) {
+                    // If user does not exist, create a new user
+                    $user = User::create([
+                        'phone_number' => $request->phone_number,
+                        'is_new_user' => true, // Default value
+                    ]);
+                }
+
+                // Generate a 6-digit OTP
+                $otp = rand(1000, 9999);
+
+                // Save OTP to the database
+                $expiresAt = Carbon::now()->addMinutes(3); // OTP valid for 3 minutes
+                UserOtp::updateOrCreate(
+                    ['user_id' => $user->id],
+                    [
+                        'otp' => $otp,
+                        'expires_at' => $expiresAt,
+                        'is_used' => false,
+                    ]
+                );
+                // Set the response
+                $response = [
+                    'user_id' => $user->id,
+                    'otp' => $otp, // You can remove this if OTP is sent via SMS
+                    'expires_at' => $expiresAt->toDateTimeString(),
+                ];
+                $msg = 'OTP generated successfully';
+                $status = 200;
+            } catch (\Exception $e) {
+                // Handle exceptions
+                $response = ['error' => $e->getMessage()];
+                $msg = 'Failed to generate OTP';
+                $status = 500;
+            }
+        }
+
+        // Return response
+        return $this->response($response, $status, $msg);
+    }
+
+
+    public function verifyOtp(Request $request)
+    {
+        // Validate the input
+        $rules = [
+            'user_id' => 'required|exists:users,id',
+            'otp' => 'required|size:4', 
+        ];
+        $validator = Validator::make($request->all(), $rules);
+
+        if ($validator->fails()) {
+            $response = $validator->errors();
+            $msg = 'Validation Errors';
+            $status = 422;
+        } else {
+            try {
+                // Check if OTP exists for the user
+                $otpRecord = UserOtp::where('user_id', $request->user_id)
+                                    ->where('otp', $request->otp)
+                                    ->first();
+
+                // Case 1: OTP does not exist
+                if (!$otpRecord) {
+                    $response = ['error' => 'The OTP is invalid or has been regenerated.'];
+                    $msg = 'Invalid OTP';
+                    $status = 400;
+                }
+                // Case 2: OTP already used
+                elseif ($otpRecord->is_used) {
+                    $response = ['error' => 'The OTP has already been used.'];
+                    $msg = 'OTP Used';
+                    $status = 400;
+                }
+                // Case 3: OTP expired
+                elseif (Carbon::now()->greaterThan($otpRecord->expires_at)) {
+                    $response = ['error' => 'The OTP has expired.'];
+                    $msg = 'OTP Expired';
+                    $status = 400;
+                } else {
+                    // Case 4: OTP is valid
+                    // Mark OTP as used
+                    $otpRecord->update(['is_used' => true]);
+
+                    // You can generate the token or login the user
+                    $user = User::find($request->user_id);
+                    $token = JWTAuth::fromUser($user);
+
+                    $response = [
+                        'access_token' => $token,
+                        'user' => [
+                            'id' => $user->id,
+                            'name' => $user->name,
+                            'email' => $user->email,
+                            'phone_number' => $user->phone_number,
+                            'is_new_user' => (bool) $user->is_new_user,
+
+                        ]
+                    ];
+                    $msg = 'OTP verified successfully. User logged in.';
+                    $status = 200;
+                }
+            } catch (\Exception $e) {
+                // Handle exceptions
+                $response = ['error' => $e->getMessage()];
+                $msg = 'Failed to verify OTP';
+                $status = 500;
+            }
+        }
+
+        // Return response
+        return $this->response($response, $status, $msg);
+    }
+    
 }

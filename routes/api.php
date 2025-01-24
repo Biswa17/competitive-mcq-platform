@@ -19,5 +19,8 @@ Route::group(['namespace'=>'\App\Http\Controllers\Auth','prefix'=>'auth','middle
     Route::post('register', 'AuthController@register');
     Route::post('login', 'AuthController@login');
     Route::post('logout', 'AuthController@logout')->middleware('verifyusertoken');
+
+    Route::post('generate_otp', 'AuthController@generateOtp');
+    Route::post('verify_otp', 'AuthController@verifyOtp');
 });
 
