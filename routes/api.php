@@ -22,6 +22,21 @@ Route::group(['namespace'=>'\App\Http\Controllers\Auth','prefix'=>'auth','middle
     Route::post('register_details', 'UserController@registerUser')->middleware('verifyusertoken')->name('register_details');
 });
 
-Route::group(['namespace'=>'\App\Http\Controllers\StoreFront','prefix'=>'user','middleware'=>['api']],function(){
-    Route::get('details', 'UserController@getUserDetails')->middleware('verifyusertoken');
+Route::group(['namespace'=>'\App\Http\Controllers\StoreFront','prefix'=>'sf','middleware'=>['api']],function(){
+    Route::get('user/details', 'UserController@getUserDetails')->middleware('verifyusertoken');
+    
+    Route::get('get_exams', 'ExamController@getExams');
+    Route::get('get_exams/{id}', 'ExamController@getExamById');
+
+    Route::get('categories', 'CategoryController@getCategories'); // Get all categories
+    Route::get('categories/tree', 'CategoryController@getCategoryTree'); // Get category tree
+   
+});
+
+
+Route::group(['namespace'=>'\App\Http\Controllers\Admin','prefix'=>'admin','middleware'=>['api']],function(){
+    Route::post('create_exams', 'ExamController@createExam');
+
+    Route::post('create_category', 'CategoryController@store');
+    Route::put('update_category/{id}', 'CategoryController@update');
 });
