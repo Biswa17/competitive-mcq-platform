@@ -28,8 +28,9 @@ Route::group(['namespace'=>'\App\Http\Controllers\StoreFront','prefix'=>'sf','mi
     Route::get('get_exams', 'ExamController@getExams');
     Route::get('get_exams/{id}', 'ExamController@getExamById');
 
-    Route::get('categories', 'CategoryController@getCategories'); // Get all categories
+    Route::get('categories', 'CategoryController@index'); // Get all categories
     Route::get('categories/tree', 'CategoryController@getCategoryTree'); // Get category tree
+    Route::get('categories/{id}', 'CategoryController@show'); // Get category by ID with subcategories
    
 });
 
