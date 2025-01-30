@@ -16,7 +16,7 @@ class CategoryExamSeeder extends Seeder
 
         // Define exam-category mappings
         $mappings = [
-            'GATE' => 'Postgraduate Engineering',
+            'GATE CSE' => 'Postgraduate Engineering',
             'JEE' => 'Undergraduate Engineering',
             'NEET' => 'Undergraduate Medical',
             'CAT' => 'MBA Entrance Exams',

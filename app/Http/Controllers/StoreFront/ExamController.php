@@ -73,16 +73,28 @@ class ExamController extends Controller
             $msg = 'Validation Errors';
             $status = 422;
         } else {
-            // Find the exam by ID
-            $exam = Exam::find($id);
+            // Find the exam by ID and include topics and question papers
+            $exam = Exam::with(['topics:id,name', 'questionPapers'])->find($id);
 
             if ($exam) {
-                // Prepare response for found exam
+                // Prepare response for found exam with simplified topics (no pivot)
                 $response = [
                     'exam_id' => $exam->id,
                     'name' => $exam->name,
                     'description' => $exam->description,
                     'is_active' => $exam->is_active,
+                    'topics' => $exam->topics->map(function ($topic) {
+                        return [
+                            'id' => $topic->id,
+                            'name' => $topic->name
+                        ];
+                    }),  // Remove pivot data here and only include id and name
+                    'question_papers' => $exam->questionPapers->map(function ($questionPapers) {
+                        return [
+                            'id' => $questionPapers->id,
+                            'name' => $questionPapers->name
+                        ];
+                    }),  // Simplified question papers response (only id and name)
                 ];
                 $msg = 'Exam retrieved successfully';
                 $status = 200;
@@ -97,6 +109,7 @@ class ExamController extends Controller
         // Return final response at the end
         return $this->response($response, $status, $msg);
     }
+
 
 
     public function getPopularExams(Request $request)

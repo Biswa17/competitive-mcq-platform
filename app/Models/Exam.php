@@ -40,4 +40,14 @@ class Exam extends Model
         return $this->belongsToMany(Category::class, 'category_exam_rel', 'exam_id', 'category_id');
     }
 
+    public function topics()
+    {
+        return $this->belongsToMany(Topic::class, 'exam_topic_rel');
+    }
+
+    public function questionPapers()
+    {
+        return $this->hasMany(QuestionPaper::class);
+    }
+
 }

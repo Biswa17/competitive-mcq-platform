@@ -19,11 +19,12 @@ class ExamSeeder extends Seeder
         \DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         Exam::create([
-            'name' => 'GATE',
-            'description' => 'Graduate Aptitude Test in Engineering for multiple streams.',
+            'name' => 'GATE CSE',
+            'description' => 'Graduate Aptitude Test in Engineering for Computer Science and Engineering.',
             'is_active' => true,
-            'is_popular'=>true
+            'is_popular' => true
         ]);
+        
 
         Exam::create([
             'name' => 'JEE',
