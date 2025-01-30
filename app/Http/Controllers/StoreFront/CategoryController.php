@@ -4,6 +4,7 @@ namespace App\Http\Controllers\StoreFront;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Validator;
 
 class CategoryController extends Controller
 {
@@ -28,7 +29,7 @@ class CategoryController extends Controller
             $status = 422;
         } else {
             // Get top-level categories
-            $categories = Category::whereNull('parent_id')->get();
+            $categories = Category::get();
 
             if ($categories) {
                 $response = $categories;

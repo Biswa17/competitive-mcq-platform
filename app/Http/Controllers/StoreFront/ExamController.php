@@ -97,4 +97,45 @@ class ExamController extends Controller
         // Return final response at the end
         return $this->response($response, $status, $msg);
     }
+
+
+    public function getPopularExams(Request $request)
+    {
+        // Define validation rules (empty in this case)
+        $rules = [];
+
+        // Validate the request data
+        $validator = Validator::make($request->all(), $rules);
+
+        // Initialize response variables
+        $response = [];
+        $msg = '';
+        $status = 200;
+
+        // If validation fails, return error response
+        if ($validator->fails()) {
+            $response = $validator->errors();
+            $msg = 'Validation Errors';
+            $status = 422;
+        } else {
+            // Fetch popular exams (where is_popular is true)
+            $popularExams = Exam::where('is_popular', true)->get();
+
+            if ($popularExams->isNotEmpty()) {
+                $response = [
+                    'exams' => $popularExams
+                ];
+                $msg = 'Popular exams retrieved successfully';
+                $status = 200;
+            } else {
+                $response = [];
+                $msg = 'No popular exams found';
+                $status = 404;
+            }
+        }
+
+        // Return final response at the end
+        return $this->response($response, $status, $msg);
+    }
+
 }

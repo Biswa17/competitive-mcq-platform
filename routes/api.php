@@ -26,7 +26,9 @@ Route::group(['namespace'=>'\App\Http\Controllers\StoreFront','prefix'=>'sf','mi
     Route::get('user/details', 'UserController@getUserDetails')->middleware('verifyusertoken');
     
     Route::get('get_exams', 'ExamController@getExams');
-    Route::get('get_exams/{id}', 'ExamController@getExamById');
+    Route::get('get_exam/{id}', 'ExamController@getExamById');
+    Route::get('get_popular_exams', 'ExamController@getPopularExams');
+    
 
     Route::get('categories', 'CategoryController@index'); // Get all categories
     Route::get('categories/tree', 'CategoryController@getCategoryTree'); // Get category tree

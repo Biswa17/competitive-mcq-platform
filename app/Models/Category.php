@@ -14,6 +14,7 @@ class Category extends Model
         'name', 
         'description', 
         'parent_id',
+        'is_popular'
     ];
 
     /**
@@ -21,7 +22,7 @@ class Category extends Model
      */
     public function children()
     {
-        return $this->hasMany(Category::class, 'parent_id');
+        return $this->hasMany(Category::class, 'parent_id')->with('children');
     }
 
     /**
@@ -31,4 +32,10 @@ class Category extends Model
     {
         return $this->belongsTo(Category::class, 'parent_id');
     }
+
+    public function exams()
+    {
+        return $this->belongsToMany(Exam::class, 'category_exam_rel', 'category_id', 'exam_id');
+    }
+
 }

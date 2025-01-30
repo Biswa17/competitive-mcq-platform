@@ -34,4 +34,10 @@ class Exam extends Model
     {
         return $query->where('is_active', true);
     }
+
+    public function categories()
+    {
+        return $this->belongsToMany(Category::class, 'category_exam_rel', 'exam_id', 'category_id');
+    }
+
 }
