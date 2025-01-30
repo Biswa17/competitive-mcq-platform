@@ -42,8 +42,9 @@ class Exam extends Model
 
     public function topics()
     {
-        return $this->belongsToMany(Topic::class, 'exam_topic_rel');
+        return $this->belongsToMany(Topic::class, 'exam_topic_rel')->distinct();
     }
+
 
     public function questionPapers()
     {

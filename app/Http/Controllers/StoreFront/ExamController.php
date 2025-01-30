@@ -74,7 +74,7 @@ class ExamController extends Controller
             $status = 422;
         } else {
             // Find the exam by ID and include topics and question papers
-            $exam = Exam::with(['topics:id,name', 'questionPapers'])->find($id);
+            $exam = Exam::with(['topics', 'questionPapers'])->find($id);
 
             if ($exam) {
                 // Prepare response for found exam with simplified topics (no pivot)
