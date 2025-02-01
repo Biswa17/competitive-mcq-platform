@@ -33,7 +33,10 @@ Route::group(['namespace'=>'\App\Http\Controllers\StoreFront','prefix'=>'sf','mi
     Route::get('categories', 'CategoryController@index'); // Get all categories
     Route::get('categories/tree', 'CategoryController@getCategoryTree'); // Get category tree
     Route::get('categories/{id}', 'CategoryController@show'); // Get category by ID with subcategories
-   
+
+
+   Route::get('questions/topic/{id}', 'QuestionController@getQuestionsByTopic');
+
 });
 
 

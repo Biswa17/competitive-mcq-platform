@@ -21,6 +21,15 @@ class CreateQuestionsTable extends Migration
             $table->string('option_c');  // Option C
             $table->string('option_d');  // Option D
             $table->string('correct_option');  // The correct answer (A, B, C, D)
+
+            // Use snake_case for column names
+            $table->enum('difficulty_level', ['easy', 'medium', 'hard'])->default('medium');
+
+            // Explanations for each option
+            $table->text('option_a_explanation')->nullable();
+            $table->text('option_b_explanation')->nullable();
+            $table->text('option_c_explanation')->nullable();
+            $table->text('option_d_explanation')->nullable();
             
             // Optional foreign keys for associating question with question paper or topic
             $table->foreignId('question_paper_id')->nullable()->constrained('question_papers')->onDelete('cascade');  // nullable as not every question has a question paper
