@@ -61,19 +61,19 @@ class QuestionController extends Controller
                             'choices' => [
                                 'A' => [
                                     'value' => $question->option_a,
-                                    'explanation' => "Explanation for option A."
+                                    'explanation' => $question->option_a_explanation ?? null  // Return null if no explanation
                                 ],
                                 'B' => [
                                     'value' => $question->option_b,
-                                    'explanation' => "Explanation for option B."
+                                    'explanation' => $question->option_b_explanation ?? null  // Return null if no explanation
                                 ],
                                 'C' => [
                                     'value' => $question->option_c,
-                                    'explanation' => "Explanation for option C."
+                                    'explanation' => $question->option_c_explanation ?? null  // Return null if no explanation
                                 ],
                                 'D' => [
                                     'value' => $question->option_d,
-                                    'explanation' => "Explanation for option D."
+                                    'explanation' => $question->option_d_explanation ?? null  // Return null if no explanation
                                 ]
                                 ],
                             'correct_option' => $question->correct_option
