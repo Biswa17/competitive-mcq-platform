@@ -144,8 +144,9 @@ class AuthController extends Controller
     {
         // Validate the phone number
         $rules = [
-            'phone_number' => 'required|string|max:10',
+            'phone_number' => 'required|digits:10',
         ];
+        
         $validator = Validator::make($request->all(), $rules);
 
         if ($validator->fails()) {
