@@ -23,7 +23,7 @@ class QuestionSeeder extends Seeder
 
         // Get all topics related to exam_id = 1
         $topics = Topic::whereHas('exams', function ($query) {
-            $query->where('exams.id', 2);  // Specify table name to avoid ambiguity
+            $query->where('exams.id', 1);  // Specify table name to avoid ambiguity
         })->get();
         
 
@@ -41,12 +41,12 @@ class QuestionSeeder extends Seeder
         foreach ($topics as $topic) {
             $questions = $this->get_question($topic->name);
             foreach ($questions as $questionData) {
-                // // Check if the question already exists
-                // $exists = Question::where('question_text', $questionData['question_text'])
-                // ->where('topic_id', $topic->id)
-                // ->exists();
+                // Check if the question already exists
+                $exists = Question::where('question_text', $questionData['question_text'])
+                ->where('topic_id', $topic->id)
+                ->exists();
 
-                // if (!$exists) {
+                if (!$exists) {
                     Question::create([
                         'question_text' => $questionData['question_text'],
                         'option_a' => $questionData['option_a'],
@@ -57,7 +57,7 @@ class QuestionSeeder extends Seeder
                         'topic_id' => $topic->id,
                         'question_paper_id' => null,
                     ]);
-                // }
+                }
             }
         }
         

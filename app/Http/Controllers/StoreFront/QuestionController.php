@@ -6,6 +6,7 @@ use App\Models\Question;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\Controller;
+use App\Models\UserAnswer;
 
 class QuestionController extends Controller
 {
@@ -95,6 +96,35 @@ class QuestionController extends Controller
         // Return final response at the end
         return $this->response($response, $status, $msg);
     }
+
+    
+    
+    public function storeUserAnswer(Request $request)
+    {
+        $rules = [
+            'user_id' => 'required|exists:users,id',
+            'topic_id' => 'required|exists:topics,id',
+            'question_id' => 'required|exists:questions,id',
+            'selected_option' => 'required|in:A,B,C,D',
+        ];
+    
+        $validator = Validator::make($request->all(), $rules);
+    
+        $response = [];
+        $status = 200;
+        $msg = "done";
+    
+        if ($validator->fails()) {
+            $response = $validator->errors();
+            $msg = 'Validation Errors';
+            $status = 422;
+        } else {
+            UserAnswer::create($request->only(['user_id', 'topic_id', 'question_id', 'selected_option']));
+        }
+    
+        return $this->response($response, $status, $msg);
+    }
+    
 
 
 }
