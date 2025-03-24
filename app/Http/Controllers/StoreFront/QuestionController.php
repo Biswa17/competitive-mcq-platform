@@ -102,28 +102,40 @@ class QuestionController extends Controller
     public function storeUserAnswer(Request $request)
     {
         $rules = [
-            'user_id' => 'required|exists:users,id',
             'topic_id' => 'required|exists:topics,id',
             'question_id' => 'required|exists:questions,id',
             'selected_option' => 'required|in:A,B,C,D',
         ];
-    
+
         $validator = Validator::make($request->all(), $rules);
-    
+
         $response = [];
         $status = 200;
         $msg = "done";
-    
+
         if ($validator->fails()) {
             $response = $validator->errors();
             $msg = 'Validation Errors';
             $status = 422;
         } else {
-            UserAnswer::create($request->only(['user_id', 'topic_id', 'question_id', 'selected_option']));
+            $user_id = $request->token_id; // Extract user ID from token
+
+            // Update or Create based on user_id and question_id
+            UserAnswer::updateOrCreate(
+                [
+                    'user_id' => $user_id,
+                    'question_id' => $request->question_id,
+                ],
+                [
+                    'topic_id' => $request->topic_id,
+                    'selected_option' => $request->selected_option,
+                ]
+            );
         }
-    
+
         return $this->response($response, $status, $msg);
     }
+
     
 
 
