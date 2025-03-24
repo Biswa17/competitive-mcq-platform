@@ -121,7 +121,7 @@ class QuestionController extends Controller
             $user_id = $request->token_id; // Extract user ID from token
 
             // Update or Create based on user_id and question_id
-            UserAnswer::updateOrCreate(
+            $response = UserAnswer::updateOrCreate(
                 [
                     'user_id' => $user_id,
                     'question_id' => $request->question_id,
