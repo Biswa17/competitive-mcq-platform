@@ -113,8 +113,9 @@ class QuestionController extends Controller
     {
         $rules = [
             'topic_id' => 'required|exists:topics,id',
-            'question_id' => 'required|exists:questions,id',
-            'selected_option' => 'required|in:A,B,C,D',
+            'answers' => 'required|array',
+            'answers.*.question_id' => 'required|exists:questions,id,topic_id,' . $request->topic_id,
+            'answers.*.selected_option' => 'required|in:A,B,C,D',
         ];
 
         $validator = Validator::make($request->all(), $rules);
@@ -128,25 +129,32 @@ class QuestionController extends Controller
             $msg = 'Validation Errors';
             $status = 422;
         } else {
-            $user_id = $request->token_id; // Extract user ID from token
+            try {
+                $user_id = $request->token_id;
+                $responses = [];
 
-            // Update or Create based on user_id and question_id
-            $response = UserAnswer::updateOrCreate(
-                [
-                    'user_id' => $user_id,
-                    'question_id' => $request->question_id,
-                ],
-                [
-                    'topic_id' => $request->topic_id,
-                    'selected_option' => $request->selected_option,
-                ]
-            );
+                foreach ($request->answers as $answer) {
+                    $responses[] = UserAnswer::updateOrCreate(
+                        [
+                            'user_id' => $user_id,
+                            'question_id' => $answer['question_id'],
+                            'topic_id' => $request->topic_id,
+                        ],
+                        [
+                            'selected_option' => $answer['selected_option'],
+                        ]
+                    );
+                }
+
+                $response = $responses;
+            } catch (\Exception $e) {
+                $response = ['error' => 'An error occurred while saving answers'];
+                $msg = 'Database Error';
+                $status = 500;
+            }
         }
 
         return $this->response($response, $status, $msg);
     }
-
-    
-
 
 }
