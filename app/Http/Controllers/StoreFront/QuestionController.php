@@ -101,7 +101,7 @@ class QuestionController extends Controller
             $msg = 'Questions retrieved successfully';
         } else {
             $msg = 'No questions found for this topic and filters';
-            $status = 404;
+            $status = 200;
         }
 
         return $this->response($response, $status, $msg);

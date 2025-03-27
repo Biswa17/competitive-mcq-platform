@@ -43,7 +43,7 @@ class ExamController extends Controller
             } else {
                 $response = [];
                 $msg = 'No exams found';
-                $status = 404;
+                $status = 200;
             }
         }
 
@@ -143,7 +143,7 @@ class ExamController extends Controller
             } else {
                 $response = [];
                 $msg = 'No popular exams found';
-                $status = 404;
+                $status = 200;
             }
         }
 
