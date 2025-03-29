@@ -51,7 +51,10 @@ Route::group(['namespace' => '\App\Http\Controllers\StoreFront', 'prefix' => 'sf
 
 Route::group(['namespace'=>'\App\Http\Controllers\Admin','prefix'=>'admin','middleware'=>['api']],function(){
     Route::post('create_exams', 'ExamController@createExam');
-
     Route::post('create_category', 'CategoryController@store');
     Route::put('update_category/{id}', 'CategoryController@update');
+    
+    // Question Paper CRUD routes
+    Route::apiResource('question_papers', 'QuestionPaperController');
+    Route::post('question_papers/analyze', 'QuestionPaperController@analyzeFile');
 });
