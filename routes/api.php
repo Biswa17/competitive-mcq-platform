@@ -26,9 +26,9 @@ Route::group(['namespace' => '\App\Http\Controllers\Auth', 'prefix' => 'auth', '
 });
 
 Route::group(['namespace' => '\App\Http\Controllers\StoreFront', 'prefix' => 'sf', 'middleware' => ['api']], function () {
-    // Open API Routes
+    // Open API Routes (Allowing Guest Access where needed)
     Route::get('get_exams', 'ExamController@getExams');
-    Route::get('get_exam/{id}', 'ExamController@getExamById');
+    Route::get('get_exam/{id}', 'ExamController@getExamById')->middleware('allow.guest'); // Apply AllowGuestMiddleware
     Route::get('get_popular_exams', 'ExamController@getPopularExams');
 
     Route::get('categories', 'CategoryController@index'); // Get all categories

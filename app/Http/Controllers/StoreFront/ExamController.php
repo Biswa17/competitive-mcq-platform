@@ -4,7 +4,10 @@ namespace App\Http\Controllers\StoreFront;
 
 use App\Http\Controllers\Controller;
 use App\Models\Exam;
+use App\Models\Question;
+use App\Models\UserAnswer;
 use Illuminate\Http\Request;
+// Removed: use Illuminate\Support\Facades\Auth;
 use Validator;
 
 class ExamController extends Controller
@@ -85,17 +88,57 @@ class ExamController extends Controller
                     'is_active' => $exam->is_active,
                     'topics' => $exam->topics->map(function ($topic) {
                         return [
-                            'id' => $topic->id,
-                            'name' => $topic->name
-                        ];
-                    }),  // Remove pivot data here and only include id and name
-                    'question_papers' => $exam->questionPapers->map(function ($questionPapers) {
-                        return [
+                                'id' => $topic->id,
+                                'name' => $topic->name,
+                                'solved_percentage' => 0
+                            ];
+            }),
+            'question_papers' => $exam->questionPapers->map(function ($questionPapers) {
+                return [
                             'id' => $questionPapers->id,
                             'name' => $questionPapers->name
                         ];
-                    }),  // Simplified question papers response (only id and name)
+                    }),
                 ];
+
+                // Get user ID from the request (set by AllowGuestMiddleware)
+                $userId = $request->token_id; // Will be user ID or -1 for guests
+
+                if ($userId && $userId != -1) {
+                    // User is authenticated, calculate solved percentage
+                    $response['topics'] = $exam->topics->map(function ($topic) use ($userId, $exam) {
+                        // Count total questions for this topic in this exam
+                        // Assuming Question model has topic_id
+                        // Need to refine this query based on actual DB structure
+                        $totalQuestions = Question::where('topic_id', $topic->id)
+                                                ->count();
+
+                        // Count attempted questions by the user for this topic
+                        $attemptedQuestions = UserAnswer::where('user_id', $userId)
+                                                        ->where('topic_id', $topic->id)
+                                                        ->count();
+
+                        // Calculate percentage
+                        $solvedPercentage = ($totalQuestions > 0) ? round(($attemptedQuestions / $totalQuestions) * 100) : 0;
+
+                        return [
+                            'id' => $topic->id,
+                            'name' => $topic->name,
+                            'solved_percentage' => $solvedPercentage
+                        ];
+                    });
+                } else {
+                     // User is a guest (token_id is -1 or missing), set percentage to 0
+                     $response['topics'] = $exam->topics->map(function ($topic) {
+                        return [
+                            'id' => $topic->id,
+                            'name' => $topic->name,
+                            'solved_percentage' => 60
+                        ];
+                    });
+                }
+
+
                 $msg = 'Exam retrieved successfully';
                 $status = 200;
             } else {
