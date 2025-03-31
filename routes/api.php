@@ -40,9 +40,13 @@ Route::group(['namespace' => '\App\Http\Controllers\StoreFront', 'prefix' => 'sf
     Route::group(['middleware' => ['verifyusertoken']], function () {
         Route::get('user/details', 'UserController@getUserDetails');
         Route::get('questions/topic/{id}', 'QuestionController@getQuestionsByTopic');
+        Route::get('questions/question-paper/{id}', 'QuestionController@getQuestionsByQuestionPaper'); // New route for question paper
         
-        // Store user answers
-        Route::post('questions/user-answer', 'QuestionController@storeUserAnswer');
+        // Store user answers by topic
+        Route::post('questions/user-answer-by-topic', 'QuestionController@storeUserAnswerByTopic'); // Renamed route and controller method
+
+        // Store user answers for question paper
+        Route::post('questions/user-answer-for-question-paper', 'QuestionController@storeUserAnswerForQuestionPaper'); // New route
 
     });
 });

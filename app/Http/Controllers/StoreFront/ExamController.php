@@ -5,7 +5,7 @@ namespace App\Http\Controllers\StoreFront;
 use App\Http\Controllers\Controller;
 use App\Models\Exam;
 use App\Models\Question;
-use App\Models\UserAnswer;
+use App\Models\UserAnswerByTopic;
 use Illuminate\Http\Request;
 // Removed: use Illuminate\Support\Facades\Auth;
 use Validator;
@@ -114,7 +114,7 @@ class ExamController extends Controller
                                                 ->count();
 
                         // Count attempted questions by the user for this topic
-                        $attemptedQuestions = UserAnswer::where('user_id', $userId)
+                        $attemptedQuestions = UserAnswerByTopic::where('user_id', $userId)
                                                         ->where('topic_id', $topic->id)
                                                         ->count();
 
