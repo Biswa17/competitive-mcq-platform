@@ -57,7 +57,7 @@ class ExtractImageContentCommand extends Command
                     'option_c': 'Option C',
                     'option_d': 'Option D',
                     'correct_option': 'A',
-                    'image': 'base64_encoded_image_data' // If applicable
+                    'image': 'true/false' // If applicable
                 }
             ]";
 
