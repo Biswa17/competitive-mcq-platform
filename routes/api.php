@@ -23,6 +23,7 @@ Route::group(['namespace' => '\App\Http\Controllers\Auth', 'prefix' => 'auth', '
         Route::post('logout', 'AuthController@logout')->name('logout');
         Route::post('register_details', 'UserController@registerUser')->name('register_details');
     });
+    
 });
 
 Route::group(['namespace' => '\App\Http\Controllers\StoreFront', 'prefix' => 'sf', 'middleware' => ['api']], function () {
@@ -55,10 +56,16 @@ Route::group(['namespace' => '\App\Http\Controllers\StoreFront', 'prefix' => 'sf
 
 Route::group(['namespace'=>'\App\Http\Controllers\Admin','prefix'=>'admin','middleware'=>['api']],function(){
     Route::post('create_exams', 'ExamController@createExam');
+    Route::get('exams', 'ExamController@getExams'); 
+    Route::get('exams/{id}', 'ExamController@getExamById');
+    Route::put('exams/{id}', 'ExamController@updateExam');
+    
     Route::post('create_category', 'CategoryController@store');
     Route::put('update_category/{id}', 'CategoryController@update');
     
     // Question Paper CRUD routes
     Route::apiResource('question_papers', 'QuestionPaperController');
     Route::post('question_papers/analyze', 'QuestionPaperController@analyzeFile');
+    // Exam management routes
+   
 });
