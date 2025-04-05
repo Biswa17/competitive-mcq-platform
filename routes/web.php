@@ -21,11 +21,22 @@ use App\Http\Controllers\Admin\SettingsController;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    // If user is already logged in, redirect to admin dashboard
+    if (session()->has('admin_token')) {
+        return redirect()->route('admin.dashboard');
+    }
+    return view('login');
 });
 
+// Admin Auth Routes
+Route::post('/admin/login', [App\Http\Controllers\Auth\AuthController::class, 'adminLogin'])->name('admin.login');
+Route::get('/admin/logout', function() {
+    session()->forget('admin_token');
+    return redirect('/')->with('success', 'You have been logged out successfully.');
+})->name('admin.logout');
+
 // Admin Routes
-Route::prefix('admin')->group(function () {
+Route::prefix('admin')->middleware('admin.auth')->group(function () {
     Route::get('/dashboard', function () {
         return view('admin.dashboard');
     })->name('admin.dashboard');

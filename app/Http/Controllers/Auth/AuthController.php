@@ -271,5 +271,51 @@ class AuthController extends Controller
         // Return response
         return $this->response($response, $status, $msg);
     }
-    
+
+    /**
+     * Admin login for web interface.
+     *
+     * @param  Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function adminLogin(Request $request)
+    {
+        // Validate
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'password' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput($request->except('password'));
+        }
+
+        $credentials = $request->only('email', 'password');
+
+        if (!$token = JWTAuth::attempt($credentials)) {
+            return redirect()->back()
+                ->with('error', 'Invalid email or password')
+                ->withInput($request->except('password'));
+        }
+
+        $user = JWTAuth::user();
+        
+        // Check if user has admin role
+        if ($user->role !== 'admin') {
+            // Invalidate the token since it's not an admin
+            JWTAuth::invalidate(JWTAuth::getToken());
+            
+            return redirect()->back()
+                ->with('error', 'Unauthorized. Admin access only.')
+                ->withInput($request->except('password'));
+        }
+
+        // Store token in session
+        session(['admin_token' => $token]);
+        
+        // Redirect to admin dashboard
+        return redirect()->route('admin.dashboard');
+    }
 }
