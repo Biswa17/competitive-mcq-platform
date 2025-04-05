@@ -32,6 +32,49 @@ class ExamController extends Controller
             'topics' => $topics
         ]);
     }
+
+    /**
+    * Store a newly created exam in the database.
+    */
+    public function store(Request $request)
+    {
+        // Validate the request data
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'is_active' => 'required|boolean',
+            'categories' => 'nullable|array',
+            'categories.*' => 'exists:categories,id',
+            'topics' => 'nullable|array',
+            'topics.*' => 'exists:topics,id',
+        ]);
+
+        try {
+            // Create the exam record
+            $exam = Exam::create([
+                'name' => $request->name,
+                'description' => $request->description,
+                'is_active' => $request->is_active,
+            ]);
+
+            // Attach categories if provided
+            if ($request->has('categories')) {
+                $exam->categories()->attach($request->categories);
+            }
+
+            // Attach topics if provided
+            if ($request->has('topics')) {
+                $exam->topics()->attach($request->topics);
+            }
+
+            // Redirect back with success message
+            return redirect()->route('admin.exams')->with('success', 'Exam created successfully');
+        } catch (\Exception $e) {
+            // Redirect back with error message
+            return redirect()->route('admin.exams')->with('error', 'Failed to create exam: ' . $e->getMessage());
+        }
+    }
+
     
     /**
      * Get a single exam by ID.
@@ -146,48 +189,7 @@ class ExamController extends Controller
         return $this->response($response, $status, $msg);
     }
 
-    /**
-     * Store a newly created exam in the database.
-     */
-    public function store(Request $request)
-    {
-        // Validate the request data
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'is_active' => 'required|boolean',
-            'categories' => 'nullable|array',
-            'categories.*' => 'exists:categories,id',
-            'topics' => 'nullable|array',
-            'topics.*' => 'exists:topics,id',
-        ]);
-
-        try {
-            // Create the exam record
-            $exam = Exam::create([
-                'name' => $request->name,
-                'description' => $request->description,
-                'is_active' => $request->is_active,
-            ]);
-
-            // Attach categories if provided
-            if ($request->has('categories')) {
-                $exam->categories()->attach($request->categories);
-            }
-
-            // Attach topics if provided
-            if ($request->has('topics')) {
-                $exam->topics()->attach($request->topics);
-            }
-
-            // Redirect back with success message
-            return redirect()->route('admin.exams')->with('success', 'Exam created successfully');
-        } catch (\Exception $e) {
-            // Redirect back with error message
-            return redirect()->route('admin.exams')->with('error', 'Failed to create exam: ' . $e->getMessage());
-        }
-    }
-
+   
     /**
      * Create a new exam by the admin (API endpoint).
      */
@@ -284,4 +286,92 @@ class ExamController extends Controller
         // Return final response at the end
         return $this->response($response, $status, $msg);
     }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(Exam $exam)
+    {
+        // Get all categories for the category dropdown
+        $categories = Category::all();
+
+        // Get all topics for the topic dropdown
+        $topics = Topic::all();
+
+        // Pass the exam, categories, and topics data to the view
+        return view('admin.exams.edit', [
+            'exam' => $exam,
+            'categories' => $categories,
+            'topics' => $topics
+        ]);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, Exam $exam)
+    {
+        // Validate the request data
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'is_active' => 'required|boolean',
+            'categories' => 'nullable|array',
+            'categories.*' => 'exists:categories,id',
+            'topics' => 'nullable|array',
+            'topics.*' => 'exists:topics,id',
+        ]);
+
+        try {
+            // Update the exam record
+            $exam->update([
+                'name' => $request->name,
+                'description' => $request->description,
+                'is_active' => $request->is_active,
+            ]);
+
+            // Sync categories if provided
+            if ($request->has('categories')) {
+                $exam->categories()->sync($request->categories);
+            }
+
+            // Sync topics if provided
+            if ($request->has('topics')) {
+                $exam->topics()->sync($request->topics);
+            }
+
+            // Redirect back with success message
+            return redirect()->route('admin.exams')->with('success', 'Exam updated successfully');
+        } catch (\Exception $e) {
+            // Redirect back with error message
+            return redirect()->route('admin.exams')->with('error', 'Failed to update exam: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(Exam $exam)
+    {
+        // Pass the exam data to the view
+        return view('admin.exams.show', [
+            'exam' => $exam
+        ]);
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(Request $request, Exam $exam)
+    {
+        try {
+            // Delete the exam record
+            $exam->delete();
+
+            return redirect()->route('admin.exams')->with('success', 'Exam deleted successfully');
+        } catch (\Exception $e) {
+            return redirect()->route('admin.exams')->with('error', 'Failed to delete exam: ' . $e->getMessage());
+        }
+    }
+
 }

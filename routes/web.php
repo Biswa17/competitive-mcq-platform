@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\ExamController;
 
 /*
 |--------------------------------------------------------------------------
@@ -29,8 +30,12 @@ Route::prefix('admin')->group(function () {
     })->name('admin.categories');
     
     // Exams routes
-    Route::get('/exams', [\App\Http\Controllers\Admin\ExamController::class, 'index'])->name('admin.exams');
-    Route::post('/exams', [\App\Http\Controllers\Admin\ExamController::class, 'store'])->name('admin.exams.store');
+    Route::get('/exams', [ExamController::class, 'index'])->name('admin.exams');
+    Route::post('/exams', [ExamController::class, 'store'])->name('admin.exams.store');
+    Route::get('/exams/{exam}/edit', [ExamController::class, 'edit'])->name('admin.exams.edit');
+    Route::put('/exams/{exam}', [ExamController::class, 'update'])->name('admin.exams.update');
+    Route::get('/exams/{exam}', [ExamController::class, 'show'])->name('admin.exams.show');
+    Route::delete('/exams/{exam}/delete', [ExamController::class, 'destroy'])->name('admin.exams.destroy');
     
     // Add more admin routes here as needed
 });

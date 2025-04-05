@@ -112,13 +112,13 @@
                                     <td>{{ $exam->created_at->format('Y-m-d') }}</td>
                                     <td>
                                         <div class="btn-group" role="group">
-                                            <button type="button" class="btn btn-sm btn-outline-primary">
+                                            <a href="{{ route('admin.exams.edit', $exam->id) }}" class="btn btn-sm btn-outline-primary">
                                                 <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button type="button" class="btn btn-sm btn-outline-info">
+                                            </a>
+                                            <a href="{{ route('admin.exams.show', $exam->id) }}" class="btn btn-sm btn-outline-info">
                                                 <i class="fas fa-eye"></i>
-                                            </button>
-                                            <button type="button" class="btn btn-sm btn-outline-danger">
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmDelete({{ $exam->id }})">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </div>
@@ -191,4 +191,29 @@
         </div>
     </div>
 </div>
+
+<script>
+    function confirmDelete(examId) {
+        if (confirm('Are you sure you want to delete this exam?')) {
+            // Use AJAX to delete the exam
+            fetch('/admin/exams/' + examId + '/delete', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    _method: 'DELETE'
+                })
+            }).then(response => {
+                if (response.ok) {
+                    // Reload the page to reflect the changes
+                    location.reload();
+                } else {
+                    alert('Failed to delete exam.');
+                }
+            });
+        }
+    }
+</script>
 @endsection
