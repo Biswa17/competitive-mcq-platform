@@ -6,6 +6,20 @@
 
 @section('content')
 <div class="container-fluid">
+    <!-- Flash Messages -->
+    @if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    @endif
+
+    @if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    @endif
     <!-- Page Header -->
     <div class="row mb-4">
         <div class="col-12">
@@ -38,107 +52,82 @@
                                 </tr>
                             </thead>
                             <tbody>
+                                @forelse($categories as $index => $category)
                                 <tr>
-                                    <th scope="row">1</th>
-                                    <td>Programming</td>
-                                    <td>-</td>
-                                    <td>Computer programming languages and concepts</td>
-                                    <td><span class="badge bg-success">Yes</span></td>
+                                    <th scope="row">{{ $index + 1 }}</th>
+                                    <td>{{ $category->name }}</td>
+                                    <td>{{ $category->parent ? $category->parent->name : '-' }}</td>
+                                    <td>{{ $category->description }}</td>
+                                    <td>
+                                        @if($category->is_popular)
+                                            <span class="badge bg-success">Yes</span>
+                                        @else
+                                            <span class="badge bg-secondary">No</span>
+                                        @endif
+                                    </td>
                                     <td>
                                         <div class="btn-group" role="group">
-                                            <button type="button" class="btn btn-sm btn-outline-primary">
+                                            <button type="button" class="btn btn-sm btn-outline-primary" 
+                                                data-bs-toggle="modal" data-bs-target="#editCategoryModal{{ $category->id }}">
                                                 <i class="fas fa-edit"></i>
                                             </button>
-                                            <button type="button" class="btn btn-sm btn-outline-danger">
+                                            <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                data-bs-toggle="modal" data-bs-target="#deleteCategoryModal{{ $category->id }}">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </div>
                                     </td>
                                 </tr>
+                                @empty
                                 <tr>
-                                    <th scope="row">2</th>
-                                    <td>Java</td>
-                                    <td>Programming</td>
-                                    <td>Java programming language</td>
-                                    <td><span class="badge bg-success">Yes</span></td>
-                                    <td>
-                                        <div class="btn-group" role="group">
-                                            <button type="button" class="btn btn-sm btn-outline-primary">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button type="button" class="btn btn-sm btn-outline-danger">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </div>
-                                    </td>
+                                    <td colspan="6" class="text-center">No categories found</td>
                                 </tr>
-                                <tr>
-                                    <th scope="row">3</th>
-                                    <td>Python</td>
-                                    <td>Programming</td>
-                                    <td>Python programming language</td>
-                                    <td><span class="badge bg-success">Yes</span></td>
-                                    <td>
-                                        <div class="btn-group" role="group">
-                                            <button type="button" class="btn btn-sm btn-outline-primary">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button type="button" class="btn btn-sm btn-outline-danger">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th scope="row">4</th>
-                                    <td>Database</td>
-                                    <td>-</td>
-                                    <td>Database management systems</td>
-                                    <td><span class="badge bg-secondary">No</span></td>
-                                    <td>
-                                        <div class="btn-group" role="group">
-                                            <button type="button" class="btn btn-sm btn-outline-primary">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button type="button" class="btn btn-sm btn-outline-danger">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th scope="row">5</th>
-                                    <td>SQL</td>
-                                    <td>Database</td>
-                                    <td>Structured Query Language</td>
-                                    <td><span class="badge bg-success">Yes</span></td>
-                                    <td>
-                                        <div class="btn-group" role="group">
-                                            <button type="button" class="btn btn-sm btn-outline-primary">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button type="button" class="btn btn-sm btn-outline-danger">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
+                                @endforelse
                             </tbody>
                         </table>
                     </div>
-                    <nav aria-label="Page navigation">
-                        <ul class="pagination justify-content-center mt-4">
-                            <li class="page-item disabled">
-                                <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
-                            </li>
-                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                            <li class="page-item"><a class="page-link" href="#">2</a></li>
-                            <li class="page-item"><a class="page-link" href="#">3</a></li>
-                            <li class="page-item">
-                                <a class="page-link" href="#">Next</a>
-                            </li>
-                        </ul>
-                    </nav>
+                    <div class="d-flex justify-content-center mt-4">
+                        @if ($categories->hasPages())
+                            <nav>
+                                <ul class="pagination">
+                                    {{-- Previous Page Link --}}
+                                    @if ($categories->onFirstPage())
+                                        <li class="page-item disabled">
+                                            <span class="page-link" aria-hidden="true">&laquo;</span>
+                                        </li>
+                                    @else
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ $categories->previousPageUrl() }}" rel="prev" aria-label="@lang('pagination.previous')">&laquo;</a>
+                                        </li>
+                                    @endif
+
+                                    {{-- Pagination Elements --}}
+                                    @foreach ($categories->getUrlRange(1, $categories->lastPage()) as $page => $url)
+                                        @if ($page == $categories->currentPage())
+                                            <li class="page-item active" aria-current="page">
+                                                <span class="page-link">{{ $page }}</span>
+                                            </li>
+                                        @else
+                                            <li class="page-item">
+                                                <a class="page-link" href="{{ $url }}">{{ $page }}</a>
+                                            </li>
+                                        @endif
+                                    @endforeach
+
+                                    {{-- Next Page Link --}}
+                                    @if ($categories->hasMorePages())
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ $categories->nextPageUrl() }}" rel="next" aria-label="@lang('pagination.next')">&raquo;</a>
+                                        </li>
+                                    @else
+                                        <li class="page-item disabled">
+                                            <span class="page-link" aria-hidden="true">&raquo;</span>
+                                        </li>
+                                    @endif
+                                </ul>
+                            </nav>
+                        @endif
+                    </div>
                 </div>
             </div>
         </div>
@@ -153,35 +142,112 @@
                 <h5 class="modal-title" id="addCategoryModalLabel">Add New Category</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                <form>
+            <form id="addCategoryForm" action="{{ route('admin.categories.store') }}" method="POST">
+                @csrf
+                <div class="modal-body">
                     <div class="mb-3">
-                        <label for="categoryName" class="form-label">Category Name</label>
-                        <input type="text" class="form-control" id="categoryName" required>
+                        <label for="name" class="form-label">Category Name</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
                     </div>
                     <div class="mb-3">
-                        <label for="parentCategory" class="form-label">Parent Category</label>
-                        <select class="form-select" id="parentCategory">
+                        <label for="parent_id" class="form-label">Parent Category</label>
+                        <select class="form-select" id="parent_id" name="parent_id">
                             <option value="">None (Top Level)</option>
-                            <option value="1">Programming</option>
-                            <option value="4">Database</option>
+                            @foreach($allCategories as $cat)
+                                <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                            @endforeach
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label for="categoryDescription" class="form-label">Description</label>
-                        <textarea class="form-control" id="categoryDescription" rows="3"></textarea>
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
                     </div>
                     <div class="mb-3 form-check">
-                        <input type="checkbox" class="form-check-input" id="isPopular">
-                        <label class="form-check-label" for="isPopular">Mark as Popular</label>
+                        <input type="checkbox" class="form-check-input" id="is_popular" name="is_popular" value="1">
+                        <label class="form-check-label" for="is_popular">Mark as Popular</label>
                     </div>
-                </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Category Modals -->
+@foreach($categories as $category)
+<div class="modal fade" id="editCategoryModal{{ $category->id }}" tabindex="-1" aria-labelledby="editCategoryModalLabel{{ $category->id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editCategoryModalLabel{{ $category->id }}">Edit Category: {{ $category->name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ route('admin.categories.update', $category->id) }}" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="edit_name{{ $category->id }}" class="form-label">Category Name</label>
+                        <input type="text" class="form-control" id="edit_name{{ $category->id }}" name="name" value="{{ $category->name }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_parent_id{{ $category->id }}" class="form-label">Parent Category</label>
+                        <select class="form-select" id="edit_parent_id{{ $category->id }}" name="parent_id">
+                            <option value="">None (Top Level)</option>
+                            @foreach($allCategories as $parentCategory)
+                                @if($parentCategory->id != $category->id)
+                                    <option value="{{ $parentCategory->id }}" {{ $category->parent_id == $parentCategory->id ? 'selected' : '' }}>
+                                        {{ $parentCategory->name }}
+                                    </option>
+                                @endif
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_description{{ $category->id }}" class="form-label">Description</label>
+                        <textarea class="form-control" id="edit_description{{ $category->id }}" name="description" rows="3">{{ $category->description }}</textarea>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="edit_is_popular{{ $category->id }}" name="is_popular" value="1" {{ $category->is_popular ? 'checked' : '' }}>
+                        <label class="form-check-label" for="edit_is_popular{{ $category->id }}">Mark as Popular</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endforeach
+
+<!-- Delete Category Modals -->
+@foreach($categories as $category)
+<div class="modal fade" id="deleteCategoryModal{{ $category->id }}" tabindex="-1" aria-labelledby="deleteCategoryModalLabel{{ $category->id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteCategoryModalLabel{{ $category->id }}">Delete Category</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the category <strong>{{ $category->name }}</strong>?</p>
+                <p class="text-danger">This action cannot be undone. All associated data will be permanently removed.</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary">Save Category</button>
+                <form action="{{ route('admin.categories.destroy', $category->id) }}" method="POST">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-danger">Delete Category</button>
+                </form>
             </div>
         </div>
     </div>
 </div>
+@endforeach
 @endsection

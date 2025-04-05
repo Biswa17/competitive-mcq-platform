@@ -4,190 +4,270 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Exam;
+use App\Models\Topic;
 use App\Models\QuestionPaper;
+use App\Models\Question;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Validator;
+use Validator;
 
 class QuestionPaperController extends Controller
 {
     /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
+     * Display a listing of the question papers.
      */
     public function index(Request $request)
     {
-        $query = QuestionPaper::query();
-
-        if ($request->has('exam_id')) {
+        // Build query with filters
+        $query = QuestionPaper::query()->with(['exam', 'questions']);
+        
+        if ($request->has('exam_id') && $request->exam_id) {
             $query->where('exam_id', $request->exam_id);
         }
-
-        $questionPapers = $query->with('exam')->paginate(15); // Paginate results
-
-        return response()->json($questionPapers);
+        
+        if ($request->has('topic_id') && $request->topic_id) {
+            $topic = Topic::find($request->topic_id);
+            if ($topic) {
+                $query->whereHas('questions', function($q) use ($topic) {
+                    $q->where('topic_id', $topic->id);
+                });
+            }
+        }
+        
+        // Get all question papers with their relationships and paginate them
+        $questionPapers = $query->paginate(10);
+        
+        // Get all exams and topics for the filters
+        $exams = Exam::all();
+        $topics = Topic::all();
+        
+        // Pass the data to the view
+        return view('admin.question-papers.index', [
+            'questionPapers' => $questionPapers,
+            'exams' => $exams,
+            'topics' => $topics
+        ]);
     }
 
     /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'exam_id' => 'required|exists:exams,id',
-            'name' => 'required|string|max:255',
-            'question_paper_file' => 'required|file|mimes:pdf,jpg,jpeg,png|max:10240', // Max 10MB
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        $exam = Exam::find($request->exam_id);
-        if (!$exam) {
-             return response()->json(['message' => 'Exam not found'], 404);
-        }
-
-        $file = $request->file('question_paper_file');
-        $originalFileName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-        $extension = $file->getClientOriginalExtension();
-        // Sanitize exam name and original file name for path
-        $examNameSlug = \Illuminate\Support\Str::slug($exam->name);
-        $fileNameSlug = \Illuminate\Support\Str::slug($originalFileName);
-        $fileName = $fileNameSlug . '.' . $extension;
-
-        // Store the file in public/exam_name/question_paper/name_of_qpaper.extension
-        $path = $file->storeAs("public/{$examNameSlug}/question_paper", $fileName);
-
-        if (!$path) {
-            return response()->json(['message' => 'Failed to upload question paper'], 500);
-        }
-
-        // Store file path relative to the storage/app/public directory
-        $storagePath = str_replace('public/', '', $path);
-
-        $questionPaper = QuestionPaper::create([
-            'exam_id' => $request->exam_id,
-            'name' => $request->name,
-            'file_path' => $storagePath, // Store the relative path
-            'file_type' => $file->getMimeType(),
-        ]);
-
-        return response()->json($questionPaper, 201);
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\QuestionPaper  $questionPaper
-     * @return \Illuminate\Http\Response
+     * Display the specified question paper.
      */
     public function show(QuestionPaper $questionPaper)
     {
-        // Eager load the related exam
-        $questionPaper->load('exam');
-        return response()->json($questionPaper);
+        // Load the question paper with its relationships
+        $questionPaper->load(['exam', 'questions.topic']);
+        
+        // Pass the question paper data to the view
+        return view('admin.question-papers.show', [
+            'questionPaper' => $questionPaper
+        ]);
     }
 
     /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\QuestionPaper  $questionPaper
-     * @return \Illuminate\Http\Response
+     * Show the form for creating a new question paper.
+     */
+    public function create()
+    {
+        // Get all exams for the dropdown
+        $exams = Exam::all();
+        $topics = Topic::all();
+        
+        // Pass the data to the view
+        return view('admin.question-papers.create', [
+            'exams' => $exams,
+            'topics' => $topics
+        ]);
+    }
+
+    /**
+     * Show the form for editing the specified question paper.
+     */
+    public function edit(QuestionPaper $questionPaper)
+    {
+        // Load the question paper with its relationships
+        $questionPaper->load(['exam', 'questions.topic']);
+        
+        // Get all exams for the dropdown
+        $exams = Exam::all();
+        $topics = Topic::all();
+        
+        // Pass the data to the view
+        return view('admin.question-papers.edit', [
+            'questionPaper' => $questionPaper,
+            'exams' => $exams,
+            'topics' => $topics
+        ]);
+    }
+
+    /**
+     * Store a newly created question paper in the database.
+     */
+    public function store(Request $request)
+    {
+        // Validate the request data
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'exam_id' => 'required|exists:exams,id',
+            'description' => 'nullable|string',
+            'file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240', // Max 10MB
+        ]);
+
+        try {
+            // Create the question paper record
+            $questionPaper = QuestionPaper::create([
+                'title' => $request->title,
+                'exam_id' => $request->exam_id,
+                'description' => $request->description,
+            ]);
+
+            // Handle file upload if provided
+            if ($request->hasFile('file')) {
+                $file = $request->file('file');
+                $exam = Exam::find($request->exam_id);
+                $examNameSlug = \Illuminate\Support\Str::slug($exam->name);
+                $fileName = 'question_paper_' . $questionPaper->id . '.' . $file->getClientOriginalExtension();
+                
+                // Store the file
+                $path = $file->storeAs("public/{$examNameSlug}/question_papers", $fileName);
+                
+                if ($path) {
+                    $storagePath = str_replace('public/', '', $path);
+                    $questionPaper->file_path = $storagePath;
+                    $questionPaper->file_type = $file->getMimeType();
+                    $questionPaper->save();
+                }
+            }
+
+            // Redirect back with success message
+            return redirect()->route('admin.question-papers')->with('success', 'Question paper created successfully');
+        } catch (\Exception $e) {
+            // Redirect back with error message
+            return redirect()->route('admin.question-papers.create')->with('error', 'Failed to create question paper: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Update the specified question paper in storage.
      */
     public function update(Request $request, QuestionPaper $questionPaper)
     {
-        $validator = Validator::make($request->all(), [
-            'name' => 'sometimes|string|max:255',
-            'question_paper_file' => 'sometimes|file|mimes:pdf,jpg,jpeg,png|max:10240', // Max 10MB
+        // Validate the request data
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'exam_id' => 'required|exists:exams,id',
+            'description' => 'nullable|string',
+            'file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240', // Max 10MB
         ]);
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
+        try {
+            // Update the question paper record
+            $questionPaper->update([
+                'title' => $request->title,
+                'exam_id' => $request->exam_id,
+                'description' => $request->description,
+            ]);
 
-        if ($request->has('name')) {
-            $questionPaper->name = $request->name;
-        }
+            // Handle file upload if provided
+            if ($request->hasFile('file')) {
+                // Delete old file if it exists
+                if ($questionPaper->file_path) {
+                    Storage::delete('public/' . $questionPaper->file_path);
+                }
 
-        if ($request->hasFile('question_paper_file')) {
-            // Delete old file if it exists
+                $file = $request->file('file');
+                $exam = Exam::find($request->exam_id);
+                $examNameSlug = \Illuminate\Support\Str::slug($exam->name);
+                $fileName = 'question_paper_' . $questionPaper->id . '.' . $file->getClientOriginalExtension();
+                
+                // Store the new file
+                $path = $file->storeAs("public/{$examNameSlug}/question_papers", $fileName);
+                
+                if ($path) {
+                    $storagePath = str_replace('public/', '', $path);
+                    $questionPaper->file_path = $storagePath;
+                    $questionPaper->file_type = $file->getMimeType();
+                    $questionPaper->save();
+                }
+            }
+
+            // Redirect back with success message
+            return redirect()->route('admin.question-papers')->with('success', 'Question paper updated successfully');
+        } catch (\Exception $e) {
+            // Redirect back with error message
+            return redirect()->route('admin.question-papers.edit', $questionPaper)->with('error', 'Failed to update question paper: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Remove the specified question paper from storage.
+     */
+    public function destroy(QuestionPaper $questionPaper)
+    {
+        try {
+            // Check if question paper has questions
+            if ($questionPaper->questions()->count() > 0) {
+                return redirect()->route('admin.question-papers')->with('error', 'Cannot delete question paper with questions');
+            }
+
+            // Delete the associated file if it exists
             if ($questionPaper->file_path) {
                 Storage::delete('public/' . $questionPaper->file_path);
             }
 
-            $file = $request->file('question_paper_file');
-            $originalFileName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-            $extension = $file->getClientOriginalExtension();
-            $fileNameSlug = \Illuminate\Support\Str::slug($originalFileName);
-            $fileName = $fileNameSlug . '.' . $extension;
+            // Delete the question paper record
+            $questionPaper->delete();
 
-            // Get exam name for path
-            $exam = $questionPaper->exam;
-            $examNameSlug = \Illuminate\Support\Str::slug($exam->name);
-
-            // Store the new file
-            $path = $file->storeAs("public/{$examNameSlug}/question_paper", $fileName);
-            $storagePath = str_replace('public/', '', $path);
-
-            $questionPaper->file_path = $storagePath;
-            $questionPaper->file_type = $file->getMimeType();
+            return redirect()->route('admin.question-papers')->with('success', 'Question paper deleted successfully');
+        } catch (\Exception $e) {
+            return redirect()->route('admin.question-papers')->with('error', 'Failed to delete question paper: ' . $e->getMessage());
         }
-
-        $questionPaper->save();
-
-        return response()->json($questionPaper);
     }
 
     /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\QuestionPaper  $questionPaper
-     * @return \Illuminate\Http\Response
+     * Add questions to the question paper.
      */
-    public function destroy(QuestionPaper $questionPaper)
+    public function addQuestions(Request $request, QuestionPaper $questionPaper)
     {
-        // Delete the associated file if it exists
-        if ($questionPaper->file_path) {
-            Storage::delete('public/' . $questionPaper->file_path);
-        }
-
-        $questionPaper->delete();
-
-        return response()->json(['message' => 'Question paper deleted successfully']);
-    }
-
-    /**
-     * Analyze uploaded file to determine type and PDF characteristics
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function analyzeFile(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'file' => 'required|file|mimes:pdf,jpg,jpeg,png|max:10240', // Max 10MB
+        // Validate the request data
+        $request->validate([
+            'question_ids' => 'required|array',
+            'question_ids.*' => 'exists:questions,id',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+        try {
+            // Get the questions
+            $questions = Question::whereIn('id', $request->question_ids)->get();
+            
+            // Update each question to associate with this question paper
+            foreach ($questions as $question) {
+                $question->question_paper_id = $questionPaper->id;
+                $question->save();
+            }
+
+            return redirect()->route('admin.question-papers.show', $questionPaper)->with('success', 'Questions added successfully');
+        } catch (\Exception $e) {
+            return redirect()->route('admin.question-papers.show', $questionPaper)->with('error', 'Failed to add questions: ' . $e->getMessage());
         }
+    }
 
-        $file = $request->file('file');
-        $mimeType = $file->getMimeType();
-        $result = ['type' => strpos($mimeType, 'image/') === 0 ? 'image' : 'pdf'];
+    /**
+     * Remove a question from the question paper.
+     */
+    public function removeQuestion(Request $request, QuestionPaper $questionPaper, Question $question)
+    {
+        try {
+            // Check if the question belongs to this question paper
+            if ($question->question_paper_id != $questionPaper->id) {
+                return redirect()->route('admin.question-papers.show', $questionPaper)->with('error', 'Question does not belong to this question paper');
+            }
 
-        if ($result['type'] === 'pdf') {
-            $content = file_get_contents($file->getRealPath());
-            // Simple check for text content in PDF
-            $result['pdf_type'] = preg_match('/\/Font|\/Text/', $content) ? 'text' : 'image';
+            // Remove the question from this question paper
+            $question->question_paper_id = null;
+            $question->save();
+
+            return redirect()->route('admin.question-papers.show', $questionPaper)->with('success', 'Question removed successfully');
+        } catch (\Exception $e) {
+            return redirect()->route('admin.question-papers.show', $questionPaper)->with('error', 'Failed to remove question: ' . $e->getMessage());
         }
-
-        return response()->json($result);
     }
 }
