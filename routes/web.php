@@ -27,6 +27,10 @@ Route::get('/', function () {
     }
     return view('login');
 });
+// Fallback route for not found URLs
+Route::fallback(function () {
+    return redirect('/')->with('success', 'You have been logged out successfully.'); // Replace 'login' with the actual route name for your login page
+});
 
 // Admin Auth Routes
 Route::post('/admin/login', [App\Http\Controllers\Auth\AuthController::class, 'adminLogin'])->name('admin.login');
@@ -36,7 +40,7 @@ Route::get('/admin/logout', function() {
 })->name('admin.logout');
 
 // Admin Routes
-Route::prefix('admin')->middleware('admin.auth')->group(function () {
+Route::prefix('admin')->middleware('verifyadmintoken')->group(function () {
     Route::get('/dashboard', function () {
         return view('admin.dashboard');
     })->name('admin.dashboard');

@@ -294,28 +294,34 @@ class AuthController extends Controller
 
         $credentials = $request->only('email', 'password');
 
-        if (!$token = JWTAuth::attempt($credentials)) {
-            return redirect()->back()
-                ->with('error', 'Invalid email or password')
-                ->withInput($request->except('password'));
-        }
+        try {
+            if (!$token = JWTAuth::attempt($credentials)) {
+                return redirect()->back()
+                    ->with('error', 'Invalid email or password')
+                    ->withInput($request->except('password'));
+            }
 
-        $user = JWTAuth::user();
-        
-        // Check if user has admin role
-        if ($user->role !== 'admin') {
-            // Invalidate the token since it's not an admin
-            JWTAuth::invalidate(JWTAuth::getToken());
+            $user = JWTAuth::user();
+            
+            // Check if user has admin role
+            if ($user->role !== 'admin') {
+                return redirect()->back()
+                    ->with('error', 'Unauthorized User.Only Admin access only.')
+                    ->withInput($request->except('password'));
+            }
+
+            // Store token in session
+            session(['admin_token' => $token]);
+            
+            // Redirect to admin dashboard
+            return redirect()->route('admin.dashboard');
+        } catch (Exception $e) {
+            // Log the error for debugging
+            \Log::error('Admin login error: ' . $e->getMessage());
             
             return redirect()->back()
-                ->with('error', 'Unauthorized. Admin access only.')
+                ->with('error', 'Authentication error. Please try again.')
                 ->withInput($request->except('password'));
         }
-
-        // Store token in session
-        session(['admin_token' => $token]);
-        
-        // Redirect to admin dashboard
-        return redirect()->route('admin.dashboard');
     }
 }

@@ -12,6 +12,17 @@ class VerifyUserToken
     public function handle($request, Closure $next)
     {
         try {
+            // Check if token exists before attempting to parse it
+            if (!$request->bearerToken()) {
+                $response = [
+                    'status' => 'error',
+                    'status_code' => 401,
+                    'message' => 'Token is missing. Please log in.',
+                    'response' => [],
+                ];
+                return response()->json($response, 401);
+            }
+            
             // Attempt to authenticate the token
             $user = JWTAuth::parseToken()->authenticate();
             
@@ -49,7 +60,7 @@ class VerifyUserToken
             $response = [
                 'status' => 'error',
                 'status_code' => 401,
-                'message' => 'Token is missing or unauthorized.',
+                'message' => 'Token is unauthorized or invalid.',
                 'response' => [],
             ];
             return response()->json($response, 401);
