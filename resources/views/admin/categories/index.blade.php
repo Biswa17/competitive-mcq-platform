@@ -47,7 +47,7 @@
                                     <th scope="col">Name</th>
                                     <th scope="col">Parent Category</th>
                                     <th scope="col">Description</th>
-                                    <th scope="col">Popular</th>
+                                    <th scope="col">Category Level</th>
                                     <th scope="col">Actions</th>
                                 </tr>
                             </thead>
@@ -59,11 +59,7 @@
                                     <td>{{ $category->parent ? $category->parent->name : '-' }}</td>
                                     <td>{{ $category->description }}</td>
                                     <td>
-                                        @if($category->is_popular)
-                                            <span class="badge bg-success">Yes</span>
-                                        @else
-                                            <span class="badge bg-secondary">No</span>
-                                        @endif
+                                        {{ $category->level }}
                                     </td>
                                     <td>
                                         <div class="btn-group" role="group">
