@@ -9,11 +9,17 @@ use Validator;
 class CategoryController extends Controller
 {
     // Display a listing of categories
-    public function index()
+    public function index(Request $request)
     {
-        $categories = Category::with('parent')->paginate(10);
+        $sortColumn = $request->input('sort', 'name'); // Default sort by name
+        $sortOrder = $request->input('order', 'asc'); // Default sort order asc
+
+        $categories = Category::with('parent')
+            ->orderBy($sortColumn, $sortOrder)
+            ->paginate(10)
+            ->appends(['sort' => $sortColumn, 'order' => $sortOrder]);
         $allCategories = Category::all(); // Get all categories for dropdowns
-        return view('admin.categories.index', compact('categories', 'allCategories'));
+        return view('admin.categories.index', compact('categories', 'allCategories', 'sortColumn', 'sortOrder'));
     }
 
     // Add a new category
@@ -26,13 +32,24 @@ class CategoryController extends Controller
             'parent_id' => 'nullable|exists:categories,id',
         ]);
 
+        // Check if parent category is level 3
+        if ($request->parent_id) {
+            $parentCategory = Category::find($request->parent_id);
+            if ($parentCategory && $parentCategory->level == 3) {
+                return redirect()->route('admin.categories')->with('error', 'Level 3 categories cannot be parent categories');
+            }
+        }
+
         // Create category
         $category = Category::create([
             'name' => $request->name,
             'description' => $request->description,
             'parent_id' => $request->parent_id ? $request->parent_id : null,
-            'is_popular' => $request->has('is_popular') ? 1 : 0,
         ]);
+
+        // Assign category level
+        $category->level = $category->parent ? $category->parent->level + 1 : 1;
+        $category->save();
 
         // Redirect back with success message
         return redirect()->route('admin.categories')->with('success', 'Category created successfully');
@@ -53,11 +70,14 @@ class CategoryController extends Controller
             'name' => $request->name,
             'description' => $request->description,
             'parent_id' => $request->parent_id ? $request->parent_id : null,
-            'is_popular' => $request->has('is_popular') ? 1 : 0,
         ];
 
         // Update category
         $category->update($data);
+
+        // Assign category level
+        $category->level = $category->parent ? $category->parent->level + 1 : 1;
+        $category->save();
 
         return redirect()->route('admin.categories')->with('success', 'Category updated successfully');
     }

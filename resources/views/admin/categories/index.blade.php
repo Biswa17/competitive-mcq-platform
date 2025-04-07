@@ -44,17 +44,37 @@
                             <thead>
                                 <tr>
                                     <th scope="col">#</th>
-                                    <th scope="col">Name</th>
-                                    <th scope="col">Parent Category</th>
-                                    <th scope="col">Description</th>
-                                    <th scope="col">Category Level</th>
+                                    <th scope="col">
+                                        Name
+                                        <a href="{{ route('admin.categories', ['sort' => 'name', 'order' => $sortColumn == 'name' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}" class="btn btn-sm btn-link text-decoration-none">
+                                            <i class="fas fa-sort{{ $sortColumn == 'name' ? ($sortOrder == 'asc' ? '-up' : '-down') : '' }}"></i>
+                                        </a>
+                                    </th>
+                                    <th scope="col">
+                                        Parent Category
+                                        <a href="{{ route('admin.categories', ['sort' => 'parent_id', 'order' => $sortColumn == 'parent_id' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}" class="btn btn-sm btn-link text-decoration-none">
+                                            <i class="fas fa-sort{{ $sortColumn == 'parent_id' ? ($sortOrder == 'asc' ? '-up' : '-down') : '' }}"></i>
+                                        </a>
+                                    </th>
+                                    <th scope="col">
+                                        Description
+                                        <a href="{{ route('admin.categories', ['sort' => 'description', 'order' => $sortColumn == 'description' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}" class="btn btn-sm btn-link text-decoration-none">
+                                            <i class="fas fa-sort{{ $sortColumn == 'description' ? ($sortOrder == 'asc' ? '-up' : '-down') : '' }}"></i>
+                                        </a>
+                                    </th>
+                                    <th scope="col">
+                                        Category Level
+                                        <a href="{{ route('admin.categories', ['sort' => 'level', 'order' => $sortColumn == 'level' && $sortOrder == 'asc' ? 'desc' : 'asc']) }}" class="btn btn-sm btn-link text-decoration-none">
+                                            <i class="fas fa-sort{{ $sortColumn == 'level' ? ($sortOrder == 'asc' ? '-up' : '-down') : '' }}"></i>
+                                        </a>
+                                    </th>
                                     <th scope="col">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse($categories as $index => $category)
                                 <tr>
-                                    <th scope="row">{{ $index + 1 }}</th>
+                                    <th scope="row">{{ ($categories->currentPage() - 1) * $categories->perPage() + $index + 1 }}</th>
                                     <td>{{ $category->name }}</td>
                                     <td>{{ $category->parent ? $category->parent->name : '-' }}</td>
                                     <td>{{ $category->description }}</td>
@@ -86,19 +106,22 @@
                         @if ($categories->hasPages())
                             <nav>
                                 <ul class="pagination">
-                                    {{-- Previous Page Link --}}
+                                    
                                     @if ($categories->onFirstPage())
                                         <li class="page-item disabled">
                                             <span class="page-link" aria-hidden="true">&laquo;</span>
                                         </li>
                                     @else
                                         <li class="page-item">
-                                            <a class="page-link" href="{{ $categories->previousPageUrl() }}" rel="prev" aria-label="@lang('pagination.previous')">&laquo;</a>
+                                            <a class="page-link" href="{{ $categories->previousPageUrl() }}&sort={{ $sortColumn }}&order={{ $sortOrder }}" rel="prev" aria-label="@lang('pagination.previous')">&laquo;</a>
                                         </li>
                                     @endif
 
-                                    {{-- Pagination Elements --}}
+                                    
                                     @foreach ($categories->getUrlRange(1, $categories->lastPage()) as $page => $url)
+                                        @php
+                                            $url = $url . '&sort=' . $sortColumn . '&order=' . $sortOrder;
+                                        @endphp
                                         @if ($page == $categories->currentPage())
                                             <li class="page-item active" aria-current="page">
                                                 <span class="page-link">{{ $page }}</span>
@@ -110,10 +133,10 @@
                                         @endif
                                     @endforeach
 
-                                    {{-- Next Page Link --}}
+                                    
                                     @if ($categories->hasMorePages())
                                         <li class="page-item">
-                                            <a class="page-link" href="{{ $categories->nextPageUrl() }}" rel="next" aria-label="@lang('pagination.next')">&raquo;</a>
+                                            <a class="page-link" href="{{ $categories->nextPageUrl() }}&sort={{ $sortColumn }}&order={{ $sortOrder }}" rel="next" aria-label="@lang('pagination.next')">&raquo;</a>
                                         </li>
                                     @else
                                         <li class="page-item disabled">
@@ -124,6 +147,7 @@
                             </nav>
                         @endif
                     </div>
+
                 </div>
             </div>
         </div>
@@ -150,17 +174,15 @@
                         <select class="form-select" id="parent_id" name="parent_id">
                             <option value="">None (Top Level)</option>
                             @foreach($allCategories as $cat)
-                                <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                                @if($cat->level != 3)
+                                    <option value="{{ $cat->id }}">{{ $cat->name }} (Level {{ $cat->level }})</option>
+                                @endif
                             @endforeach
                         </select>
                     </div>
                     <div class="mb-3">
                         <label for="description" class="form-label">Description</label>
                         <textarea class="form-control" id="description" name="description" rows="3"></textarea>
-                    </div>
-                    <div class="mb-3 form-check">
-                        <input type="checkbox" class="form-check-input" id="is_popular" name="is_popular" value="1">
-                        <label class="form-check-label" for="is_popular">Mark as Popular</label>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -170,6 +192,7 @@
             </form>
         </div>
     </div>
+</div>
 </div>
 
 <!-- Edit Category Modals -->
@@ -194,9 +217,9 @@
                         <select class="form-select" id="edit_parent_id{{ $category->id }}" name="parent_id">
                             <option value="">None (Top Level)</option>
                             @foreach($allCategories as $parentCategory)
-                                @if($parentCategory->id != $category->id)
+                                @if($parentCategory->id != $category->id && $parentCategory->level <= 2)
                                     <option value="{{ $parentCategory->id }}" {{ $category->parent_id == $parentCategory->id ? 'selected' : '' }}>
-                                        {{ $parentCategory->name }}
+                                        {{ $parentCategory->name }} (Level {{ $parentCategory->level }})
                                     </option>
                                 @endif
                             @endforeach
