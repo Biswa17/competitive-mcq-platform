@@ -104,8 +104,8 @@ class QuestionController extends Controller
             'option_d' => 'required|string',
             'correct_option' => 'required|in:A,B,C,D',
             'exam_id' => 'required|exists:exams,id',
-            'topic_id' => 'required|exists:topics,id',
-            'question_paper_id' => 'required|exists:question_papers,id',
+            'topic_id' => 'nullable|exists:topics,id', // Made optional
+            'question_paper_id' => 'nullable|exists:question_papers,id', // Made optional
             'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
@@ -159,8 +159,8 @@ class QuestionController extends Controller
             'option_d' => 'required|string',
             'correct_option' => 'required|in:A,B,C,D',
             'exam_id' => 'required|exists:exams,id',
-            'topic_id' => 'required|exists:topics,id',
-            'question_paper_id' => 'required|exists:question_papers,id',
+            'topic_id' => 'nullable|exists:topics,id', // Made optional
+            'question_paper_id' => 'nullable|exists:question_papers,id', // Made optional
             'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'delete_images' => 'nullable|array',
             'delete_images.*' => 'exists:question_images,id',

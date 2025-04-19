@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\Controller;
 use App\Models\UserAnswerByTopic; // Renamed model
 use App\Models\UserAnswerForQuestionPaper; // Added new model
+use Illuminate\Support\Str; // Import Str helper
 
 class QuestionController extends Controller
 {
@@ -16,7 +17,7 @@ class QuestionController extends Controller
         // Initialize validation rules
         $rules = [
             'difficulty' => 'nullable|in:easy,medium,hard',
-            'page_number' => 'nullable|integer|min:1',
+            'page' => 'nullable|integer|min:1', // Renamed from page_number
             'questions_per_page' => 'nullable|integer|min:1',
             'status' => 'nullable|in:solved,unsolved',  // New filter for solved/unsolved
         ];
@@ -40,7 +41,7 @@ class QuestionController extends Controller
         $userId = $request->token_id; // Extract user ID from token
 
         // Default pagination values
-        $pageNumber = $request->get('page_number', 1);
+        $page = $request->get('page', 1); // Renamed from page_number
         $questionsPerPage = $request->get('questions_per_page', 10);
 
         // Fetch user's answered questions along with selected options for this topic
@@ -49,8 +50,8 @@ class QuestionController extends Controller
             ->pluck('selected_option', 'question_id')  // Get question_id => selected_option
             ->toArray();
 
-        // Start question query
-        $query = Question::where('topic_id', $id);
+        // Start question query, eager load images relationship
+        $query = Question::with('images')->where('topic_id', $id);
 
         // Apply difficulty filter if provided
         if ($difficulty) {
@@ -65,7 +66,7 @@ class QuestionController extends Controller
         }
 
         // Paginate the results
-        $questions = $query->paginate($questionsPerPage, ['*'], 'page', $pageNumber);
+        $questions = $query->paginate($questionsPerPage, ['*'], 'page', $page); // Use $page
 
         if ($questions->isNotEmpty()) {
             $response = [
@@ -92,11 +93,16 @@ class QuestionController extends Controller
                             ]
                         ],
                         'correct_option' => $question->correct_option,
-                        'selected_option' => $answeredQuestions[$question->id] ?? null // Get selected answer if solved
+                        'selected_option' => $answeredQuestions[$question->id] ?? null, // Get selected answer if solved
+                        'images' => $question->relationLoaded('images') ? $question->images->map(function ($image) {
+                            $path = $image->image_path;
+                            // Prepend APP_URL if the path is not already a full URL using filter_var
+                            return filter_var($path, FILTER_VALIDATE_URL) ? $path : rtrim(config('app.url'), '/') . '/' . ltrim($path, '/');
+                        })->toArray() : [] // Get image paths, prepending APP_URL if relative
                     ];
                 }),
                 'total_count' => $questions->total(),
-                'page_number' => $pageNumber,
+                'page' => $page, // Renamed from page_number
                 'questions_per_page' => $questionsPerPage,
             ];
             $msg = 'Questions retrieved successfully';
@@ -113,7 +119,7 @@ class QuestionController extends Controller
         // Initialize validation rules
         $rules = [
             'difficulty' => 'nullable|in:easy,medium,hard',
-            'page_number' => 'nullable|integer|min:1',
+            'page' => 'nullable|integer|min:1', // Renamed from page_number
             'questions_per_page' => 'nullable|integer|min:1',
             'status' => 'nullable|in:solved,unsolved',  // Filter for solved/unsolved
         ];
@@ -137,7 +143,7 @@ class QuestionController extends Controller
         $userId = $request->token_id; // Extract user ID from token
 
         // Default pagination values
-        $pageNumber = $request->get('page_number', 1);
+        $page = $request->get('page', 1); // Renamed from page_number
         $questionsPerPage = $request->get('questions_per_page', 10);
 
         // Fetch user's answered questions for this question paper
@@ -146,8 +152,8 @@ class QuestionController extends Controller
             ->pluck('selected_option', 'question_id')  // Get question_id => selected_option
             ->toArray();
 
-        // Start question query based on question_paper_id
-        $query = Question::where('question_paper_id', $id); // Changed from topic_id to question_paper_id
+        // Start question query based on question_paper_id, eager load images relationship
+        $query = Question::with('images')->where('question_paper_id', $id); // Changed from topic_id to question_paper_id
 
         // Apply difficulty filter if provided
         if ($difficulty) {
@@ -162,7 +168,7 @@ class QuestionController extends Controller
         }
 
         // Paginate the results
-        $questions = $query->paginate($questionsPerPage, ['*'], 'page', $pageNumber);
+        $questions = $query->paginate($questionsPerPage, ['*'], 'page', $page); // Use $page
 
         if ($questions->isNotEmpty()) {
             $response = [
@@ -189,11 +195,16 @@ class QuestionController extends Controller
                             ]
                         ],
                         'correct_option' => $question->correct_option,
-                        'selected_option' => $answeredQuestions[$question->id] ?? null // Get selected answer if solved
+                        'selected_option' => $answeredQuestions[$question->id] ?? null, // Get selected answer if solved
+                        'images' => $question->relationLoaded('images') ? $question->images->map(function ($image) {
+                            $path = $image->image_path;
+                            // Prepend APP_URL if the path is not already a full URL using filter_var
+                            return filter_var($path, FILTER_VALIDATE_URL) ? $path : rtrim(config('app.url'), '/') . '/' . ltrim($path, '/');
+                        })->toArray() : [] // Get image paths, prepending APP_URL if relative
                     ];
                 }),
                 'total_count' => $questions->total(),
-                'page_number' => $pageNumber,
+                'page' => $page, // Renamed from page_number
                 'questions_per_page' => $questionsPerPage,
             ];
             $msg = 'Questions retrieved successfully';

@@ -129,8 +129,8 @@
                                 @enderror
                             </div>
                             <div class="col-md-4 mb-3">
-                                <label for="topic_id" class="form-label">Topic <span class="text-danger">*</span></label>
-                                <select name="topic_id" id="topic_id" class="form-select @error('topic_id') is-invalid @enderror" required>
+                                <label for="topic_id" class="form-label">Topic</label>
+                                <select name="topic_id" id="topic_id" class="form-select @error('topic_id') is-invalid @enderror">
                                     <option value="">Select Topic</option>
                                     @foreach($topics as $topic)
                                         <option value="{{ $topic->id }}" {{ old('topic_id', $question->topic_id) == $topic->id ? 'selected' : '' }}>
@@ -143,8 +143,8 @@
                                 @enderror
                             </div>
                             <div class="col-md-4 mb-3">
-                                <label for="question_paper_id" class="form-label">Question Paper <span class="text-danger">*</span></label>
-                                <select name="question_paper_id" id="question_paper_id" class="form-select @error('question_paper_id') is-invalid @enderror" required>
+                                <label for="question_paper_id" class="form-label">Question Paper</label>
+                                <select name="question_paper_id" id="question_paper_id" class="form-select @error('question_paper_id') is-invalid @enderror">
                                     <option value="">Select Question Paper</option>
                                     @foreach($questionPapers as $paper)
                                         <option value="{{ $paper->id }}" {{ old('question_paper_id', $question->question_paper_id) == $paper->id ? 'selected' : '' }}>
