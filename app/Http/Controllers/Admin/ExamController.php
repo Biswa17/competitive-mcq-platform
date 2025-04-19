@@ -12,24 +12,48 @@ use Validator;
 class ExamController extends Controller
 {
     /**
-     * Display a listing of the exams.
+     * Display a listing of the exams, applying filters if provided.
      */
-    public function index()
+    public function index(Request $request)
     {
-        // Get all exams with their relationships and paginate them
-        $exams = Exam::with(['categories', 'topics'])->paginate(10);
+        // Start building the query for exams with relationships
+        $query = Exam::with(['categories', 'topics']);
+
+        // Apply category filter
+        if ($request->filled('category')) {
+            $query->whereHas('categories', function ($q) use ($request) {
+                $q->where('categories.id', $request->category);
+            });
+        }
+
+        // Apply status filter
+        if ($request->filled('status') && in_array($request->status, ['0', '1'])) {
+            $query->where('is_active', $request->status);
+        }
+
+        // Apply search filter
+        if ($request->filled('search')) {
+            $searchTerm = '%' . $request->search . '%';
+            $query->where('name', 'like', $searchTerm);
+            // Optionally, search in description or other fields
+            // $query->orWhere('description', 'like', $searchTerm); 
+        }
+
+        // Paginate the results
+        $exams = $query->paginate(10)->withQueryString(); // Append query string to pagination links
         
-        // Get all categories for the filter dropdown
-        $categories = Category::all();
+        // Get level 3 categories with their exam counts for the filter dropdown
+        $categories = Category::where('level', 3)->withCount('exams')->get();
         
         // Get all topics for the modal dropdown
         $topics = Topic::all();
         
-        // Pass the exams, categories, and topics data to the view
+        // Pass the exams, categories, topics, and filter inputs data to the view
         return view('admin.exams.index', [
             'exams' => $exams,
             'categories' => $categories,
-            'topics' => $topics
+            'topics' => $topics,
+            'filters' => $request->only(['category', 'status', 'search']) // Pass filters back to view
         ]);
     }
 

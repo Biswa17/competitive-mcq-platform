@@ -52,7 +52,9 @@
                             <label for="examCategories" class="form-label">Categories</label>
                             <select class="form-select" id="examCategories" name="categories[]" multiple>
                                 @foreach($categories as $category)
-                                    <option value="{{ $category->id }}" {{ $exam->categories->contains($category->id) ? 'selected' : '' }}>{{ $category->name }}</option>
+                                    @if($category->level == 3)
+                                        <option value="{{ $category->id }}" {{ $exam->categories->contains($category->id) ? 'selected' : '' }}>{{ $category->name }}</option>
+                                    @endif
                                 @endforeach
                             </select>
                             <div class="form-text">Hold Ctrl (or Cmd on Mac) to select multiple categories</div>

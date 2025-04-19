@@ -39,31 +39,33 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-body">
-                    <form class="row g-3">
+                    <form class="row g-3" method="GET" action="{{ route('admin.exams') }}">
                         <div class="col-md-4">
                             <label for="filterCategory" class="form-label">Category</label>
                             <select class="form-select" id="filterCategory" name="category">
                                 <option value="">All Categories</option>
                                 @foreach($categories as $category)
-                                    <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                    <option value="{{ $category->id }}" {{ (isset($filters['category']) && $filters['category'] == $category->id) ? 'selected' : '' }}>
+                                        {{ $category->name }} ({{ $category->exams_count }})
+                                    </option>
                                 @endforeach
                             </select>
                         </div>
                         <div class="col-md-4">
                             <label for="filterStatus" class="form-label">Status</label>
-                            <select class="form-select" id="filterStatus">
+                            <select class="form-select" id="filterStatus" name="status">
                                 <option value="">All Status</option>
-                                <option value="1">Active</option>
-                                <option value="0">Inactive</option>
+                                <option value="1" {{ (isset($filters['status']) && $filters['status'] == '1') ? 'selected' : '' }}>Active</option>
+                                <option value="0" {{ (isset($filters['status']) && $filters['status'] == '0') ? 'selected' : '' }}>Inactive</option>
                             </select>
                         </div>
                         <div class="col-md-4">
                             <label for="searchExam" class="form-label">Search</label>
-                            <input type="text" class="form-control" id="searchExam" placeholder="Search exams...">
+                            <input type="text" class="form-control" id="searchExam" name="search" placeholder="Search exams..." value="{{ $filters['search'] ?? '' }}">
                         </div>
                         <div class="col-12 text-end">
                             <button type="submit" class="btn btn-primary">Apply Filters</button>
-                            <button type="reset" class="btn btn-secondary">Reset</button>
+                            <a href="{{ route('admin.exams') }}" class="btn btn-secondary">Reset</a>
                         </div>
                     </form>
                 </div>
@@ -164,7 +166,9 @@
                         <label for="examCategories" class="form-label">Categories</label>
                         <select class="form-select" id="examCategories" name="categories[]" multiple>
                             @foreach($categories as $category)
-                                <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                @if($category->level == 3)
+                                    <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                @endif
                             @endforeach
                         </select>
                         <div class="form-text">Hold Ctrl (or Cmd on Mac) to select multiple categories</div>
