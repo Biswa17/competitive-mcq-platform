@@ -78,6 +78,15 @@
                         </div>
 
                         <div class="mb-3">
+                            <label for="year" class="form-label">Year <span class="text-danger">*</span></label>
+                            {{-- Changed type to text for datepicker --}}
+                            <input type="text" class="form-control @error('year') is-invalid @enderror" id="year" name="year" value="{{ old('year', date('Y')) }}" required placeholder="Select Year" autocomplete="off">
+                            @error('year')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="mb-3">
                             <label for="description" class="form-label">Description</label>
                             <textarea class="form-control @error('description') is-invalid @enderror" id="description" name="description" rows="3">{{ old('description') }}</textarea>
                             @error('description')
@@ -114,4 +123,21 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+{{-- Assuming bootstrap-datepicker is available --}}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+<script>
+    $(document).ready(function(){
+        $('#year').datepicker({
+            format: "yyyy",         // Display format is year
+            viewMode: "years",      // Start view in years mode
+            minViewMode: "years",   // Only allow year selection
+            autoclose: true,        // Close picker after selection
+            orientation: "bottom auto" // Adjust position if needed
+        });
+    });
+</script>
 @endsection

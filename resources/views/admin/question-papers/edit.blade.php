@@ -57,7 +57,7 @@
 
                         <div class="mb-3">
                             <label for="title" class="form-label">Title <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control @error('title') is-invalid @enderror" id="title" name="title" value="{{ old('title', $questionPaper->title) }}" required>
+                            <input type="text" class="form-control @error('title') is-invalid @enderror" id="title" name="title" value="{{ old('title', $questionPaper->name) }}" required>
                             @error('title')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -74,6 +74,15 @@
                                 @endforeach
                             </select>
                             @error('exam_id')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="year" class="form-label">Year <span class="text-danger">*</span></label>
+                            {{-- Changed type to text for datepicker, format value as Y --}}
+                            <input type="text" class="form-control @error('year') is-invalid @enderror" id="year" name="year" value="{{ old('year', $questionPaper->year ? $questionPaper->year->format('Y') : '') }}" required placeholder="Select Year" autocomplete="off">
+                            @error('year')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
@@ -141,7 +150,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p>Are you sure you want to delete the question paper <strong>{{ $questionPaper->title }}</strong>?</p>
+                <p>Are you sure you want to delete the question paper <strong>{{ $questionPaper->name }}</strong>?</p>
                 <p class="text-danger">This action cannot be undone. All associated questions will be disassociated from this question paper.</p>
             </div>
             <div class="modal-footer">
@@ -155,4 +164,21 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+{{-- Assuming bootstrap-datepicker is available --}}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+<script>
+    $(document).ready(function(){
+        $('#year').datepicker({
+            format: "yyyy",         // Display format is year
+            viewMode: "years",      // Start view in years mode
+            minViewMode: "years",   // Only allow year selection
+            autoclose: true,        // Close picker after selection
+            orientation: "bottom auto" // Adjust position if needed
+        });
+    });
+</script>
 @endsection

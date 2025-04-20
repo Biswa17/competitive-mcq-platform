@@ -132,11 +132,7 @@
                                 <label for="topic_id" class="form-label">Topic</label>
                                 <select name="topic_id" id="topic_id" class="form-select @error('topic_id') is-invalid @enderror">
                                     <option value="">Select Topic</option>
-                                    @foreach($topics as $topic)
-                                        <option value="{{ $topic->id }}" {{ old('topic_id', $question->topic_id) == $topic->id ? 'selected' : '' }}>
-                                            {{ $topic->name }}
-                                        </option>
-                                    @endforeach
+                                    <!-- Topics will be loaded dynamically -->
                                 </select>
                                 @error('topic_id')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -146,11 +142,7 @@
                                 <label for="question_paper_id" class="form-label">Question Paper</label>
                                 <select name="question_paper_id" id="question_paper_id" class="form-select @error('question_paper_id') is-invalid @enderror">
                                     <option value="">Select Question Paper</option>
-                                    @foreach($questionPapers as $paper)
-                                        <option value="{{ $paper->id }}" {{ old('question_paper_id', $question->question_paper_id) == $paper->id ? 'selected' : '' }}>
-                                            {{ $paper->title }}
-                                        </option>
-                                    @endforeach
+                                    <!-- Question papers will be loaded dynamically -->
                                 </select>
                                 @error('question_paper_id')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -233,4 +225,98 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const examSelect = document.getElementById('exam_id');
+        const topicSelect = document.getElementById('topic_id');
+        const questionPaperSelect = document.getElementById('question_paper_id');
+        
+        // Store the current topic and question paper IDs for later selection
+        const currentTopicId = "{{ old('topic_id', $question->topic_id) }}";
+        const currentQuestionPaperId = "{{ old('question_paper_id', $question->question_paper_id) }}";
+        
+        // Function to load topics based on selected exam
+        function loadTopics(examId) {
+            if (!examId) {
+                topicSelect.innerHTML = '<option value="">Select Topic</option>';
+                topicSelect.disabled = true;
+                return;
+            }
+            
+            fetch(`/admin/get-topics-by-exam/${examId}`)
+                .then(response => response.json())
+                .then(data => {
+                    topicSelect.innerHTML = '<option value="">Select Topic</option>';
+                    data.forEach(topic => {
+                        const option = document.createElement('option');
+                        option.value = topic.id;
+                        option.textContent = topic.name;
+                        
+                        // Select the current topic if it matches
+                        if (topic.id == currentTopicId) {
+                            option.selected = true;
+                        }
+                        
+                        topicSelect.appendChild(option);
+                    });
+                    topicSelect.disabled = false;
+                })
+                .catch(error => {
+                    console.error('Error loading topics:', error);
+                    topicSelect.innerHTML = '<option value="">Error loading topics</option>';
+                    topicSelect.disabled = true;
+                });
+        }
+        
+        // Function to load question papers based on selected exam
+        function loadQuestionPapers(examId) {
+            if (!examId) {
+                questionPaperSelect.innerHTML = '<option value="">Select Question Paper</option>';
+                questionPaperSelect.disabled = true;
+                return;
+            }
+            
+            fetch(`/admin/get-question-papers-by-exam/${examId}`)
+                .then(response => response.json())
+                .then(data => {
+                    questionPaperSelect.innerHTML = '<option value="">Select Question Paper</option>';
+                    data.forEach(paper => {
+                        const option = document.createElement('option');
+                        option.value = paper.id;
+                        option.textContent = paper.name;
+                        
+                        // Select the current question paper if it matches
+                        if (paper.id == currentQuestionPaperId) {
+                            option.selected = true;
+                        }
+                        
+                        questionPaperSelect.appendChild(option);
+                    });
+                    questionPaperSelect.disabled = false;
+                })
+                .catch(error => {
+                    console.error('Error loading question papers:', error);
+                    questionPaperSelect.innerHTML = '<option value="">Error loading question papers</option>';
+                    questionPaperSelect.disabled = true;
+                });
+        }
+        
+        // Event listener for exam select change
+        examSelect.addEventListener('change', function() {
+            const examId = this.value;
+            loadTopics(examId);
+            loadQuestionPapers(examId);
+        });
+        
+        // Initialize based on initial exam value
+        const initialExamId = examSelect.value;
+        if (initialExamId) {
+            loadTopics(initialExamId);
+            loadQuestionPapers(initialExamId);
+        }
+    });
+</script>
 @endsection

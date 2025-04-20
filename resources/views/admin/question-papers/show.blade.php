@@ -40,7 +40,7 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-body">
-                    <h5 class="card-title">{{ $questionPaper->title }}</h5>
+                    <h5 class="card-title">{{ $questionPaper->name }}</h5>
                     
                     <div class="row mt-4">
                         <div class="col-md-6">
@@ -60,6 +60,10 @@
                                         </td>
                                     </tr>
                                     <tr>
+                                        <th>Year</th>
+                                        <td>{{ $questionPaper->year }}</td>
+                                    </tr>
+                                    <tr>
                                         <th>Total Questions</th>
                                         <td>{{ $questionPaper->questions->count() }}</td>
                                     </tr>
@@ -70,6 +74,18 @@
                                     <tr>
                                         <th>Updated At</th>
                                         <td>{{ $questionPaper->updated_at->format('Y-m-d H:i:s') }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Sync Status</th>
+                                        <td>
+                                            @if ($questionPaper->is_sync === true)
+                                                <span class="badge bg-success">Synced</span>
+                                            @elseif ($questionPaper->is_sync === false)
+                                                <span class="badge bg-warning text-dark">Not Synced</span>
+                                            @else
+                                                <span class="badge bg-secondary">Not Set</span>
+                                            @endif
+                                        </td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -106,7 +122,7 @@
                                     <tr>
                                         <th scope="col">#</th>
                                         <th scope="col">Question</th>
-                                        <th scope="col">Topic</th>
+                                        {{-- Removed Topic Header --}}
                                         <th scope="col">Correct Option</th>
                                         <th scope="col">Actions</th>
                                     </tr>
@@ -116,7 +132,7 @@
                                     <tr>
                                         <th scope="row">{{ $index + 1 }}</th>
                                         <td>{{ Str::limit($question->question_text, 50) }}</td>
-                                        <td>{{ $question->topic->name ?? 'N/A' }}</td>
+                                        {{-- Removed Topic Data --}}
                                         <td>{{ $question->correct_option }}</td>
                                         <td>
                                             <div class="btn-group" role="group">
@@ -134,7 +150,7 @@
                                     </tr>
                                     @empty
                                     <tr>
-                                        <td colspan="5" class="text-center">No questions found in this question paper</td>
+                                        <td colspan="4" class="text-center">No questions found in this question paper</td> {{-- Adjusted colspan --}}
                                     </tr>
                                     @endforelse
                                 </tbody>
@@ -185,7 +201,7 @@
                                     <tr>
                                         <th scope="col" width="50px">Select</th>
                                         <th scope="col">Question</th>
-                                        <th scope="col">Topic</th>
+                                        {{-- Removed Topic Header from Modal --}}
                                     </tr>
                                 </thead>
                                 <tbody id="questionsTableBody">
@@ -198,7 +214,7 @@
                                             </div>
                                         </td>
                                         <td>What is the capital of France?</td>
-                                        <td>Geography</td>
+                                        {{-- Removed Topic Data from Modal Example --}}
                                     </tr>
                                     <tr>
                                         <td>
@@ -207,7 +223,7 @@
                                             </div>
                                         </td>
                                         <td>What is 2 + 2?</td>
-                                        <td>Mathematics</td>
+                                        {{-- Removed Topic Data from Modal Example --}}
                                     </tr>
                                 </tbody>
                             </table>
@@ -233,7 +249,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p>Are you sure you want to delete the question paper <strong>{{ $questionPaper->title }}</strong>?</p>
+                <p>Are you sure you want to delete the question paper <strong>{{ $questionPaper->name }}</strong>?</p>
                 <p class="text-danger">This action cannot be undone. All associated questions will be disassociated from this question paper.</p>
             </div>
             <div class="modal-footer">

@@ -17,15 +17,39 @@ class QuestionController extends Controller
     /**
      * Display a listing of the questions.
      */
-    public function index()
+    public function index(Request $request)
     {
-        // Get all questions with their relationships and paginate them
-        $questions = Question::with(['exam', 'topic', 'questionPaper', 'images'])->paginate(10);
+        // Build the query for questions
+        $query = Question::with(['exam', 'topic', 'questionPaper', 'images']);
         
-        // Get all exams, topics, and question papers for the filters
+        // Apply filters if provided
+        if ($request->has('exam_id') && $request->exam_id) {
+            $query->where('exam_id', $request->exam_id);
+        }
+        
+        if ($request->has('topic_id') && $request->topic_id) {
+            $query->where('topic_id', $request->topic_id);
+        }
+        
+        if ($request->has('question_paper_id') && $request->question_paper_id) {
+            $query->where('question_paper_id', $request->question_paper_id);
+        }
+        
+        // Get the filtered questions
+        $questions = $query->paginate(10);
+        
+        // Get all exams for the filter
         $exams = Exam::all();
-        $topics = Topic::all();
-        $questionPapers = QuestionPaper::all();
+        
+        // Get topics and question papers based on selected exam
+        if ($request->has('exam_id') && $request->exam_id) {
+            $exam = Exam::find($request->exam_id);
+            $topics = $exam ? $exam->topics : collect();
+            $questionPapers = $exam ? $exam->questionPapers : collect();
+        } else {
+            $topics = collect();
+            $questionPapers = collect();
+        }
         
         // Pass the data to the view
         return view('admin.questions.index', [
@@ -238,5 +262,23 @@ class QuestionController extends Controller
         } catch (\Exception $e) {
             return redirect()->route('admin.questions')->with('error', 'Failed to delete question: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Get topics by exam ID.
+     */
+    public function getTopicsByExam(Exam $exam)
+    {
+        $topics = $exam->topics;
+        return response()->json($topics);
+    }
+
+    /**
+     * Get question papers by exam ID.
+     */
+    public function getQuestionPapersByExam(Exam $exam)
+    {
+        $questionPapers = $exam->questionPapers;
+        return response()->json($questionPapers);
     }
 }

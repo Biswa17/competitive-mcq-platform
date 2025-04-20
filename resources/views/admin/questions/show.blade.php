@@ -113,7 +113,7 @@
                                             <th>Question Paper</th>
                                             <td>
                                                 @if($question->questionPaper)
-                                                    {{ $question->questionPaper->title }}
+                                                    {{ $question->questionPaper->name }} {{-- Use name instead of title --}}
                                                 @else
                                                     N/A
                                                 @endif

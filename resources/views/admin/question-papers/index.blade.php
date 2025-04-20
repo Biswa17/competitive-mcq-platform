@@ -53,18 +53,8 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="topic_filter" class="form-label">Topic</label>
-                            <select name="topic_id" id="topic_filter" class="form-select">
-                                <option value="">All Topics</option>
-                                @foreach($topics as $topic)
-                                    <option value="{{ $topic->id }}" {{ request('topic_id') == $topic->id ? 'selected' : '' }}>
-                                        {{ $topic->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-4 d-flex align-items-end mb-3">
+                        {{-- Removed Topic Filter --}}
+                        <div class="col-md-8 d-flex align-items-end mb-3"> {{-- Adjusted column width --}}
                             <button type="submit" class="btn btn-primary me-2">Filter</button>
                             <a href="{{ route('admin.question-papers') }}" class="btn btn-secondary">Reset</a>
                         </div>
@@ -86,7 +76,9 @@
                                     <th scope="col">#</th>
                                     <th scope="col">Title</th>
                                     <th scope="col">Exam</th>
+                                    <th scope="col">Year</th> {{-- Added Year Header --}}
                                     <th scope="col">Questions</th>
+                                    <th scope="col">Is Synced</th> {{-- Added Is Synced Header --}}
                                     <th scope="col">File</th>
                                     <th scope="col">Actions</th>
                                 </tr>
@@ -95,9 +87,19 @@
                                 @forelse($questionPapers as $index => $paper)
                                     <tr>
                                         <th scope="row">{{ $questionPapers->firstItem() + $index }}</th>
-                                        <td>{{ $paper->title }}</td>
+                                        <td>{{ $paper->name }}</td>
                                         <td>{{ $paper->exam->name ?? 'N/A' }}</td>
+                                        <td>{{ $paper->year ? $paper->year->format('Y') : 'N/A' }}</td> {{-- Added Year Data --}}
                                         <td>{{ $paper->questions->count() }}</td>
+                                        <td> {{-- Added Is Synced Data --}}
+                                            @if ($paper->is_sync === true)
+                                                <span class="badge bg-success">Synced</span>
+                                            @elseif ($paper->is_sync === false)
+                                                <span class="badge bg-warning text-dark">Not Synced</span>
+                                            @else
+                                                <span class="badge bg-secondary">Not Set</span>
+                                            @endif
+                                        </td>
                                         <td>
                                             @if($paper->file_path)
                                                 <a href="{{ asset('storage/' . $paper->file_path) }}" target="_blank" class="btn btn-sm btn-outline-info">
@@ -123,7 +125,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="6" class="text-center">No question papers found</td>
+                                        <td colspan="8" class="text-center">No question papers found</td> {{-- Adjusted colspan --}}
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -150,7 +152,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p>Are you sure you want to delete the question paper <strong>{{ $paper->title }}</strong>?</p>
+                <p>Are you sure you want to delete the question paper <strong>{{ $paper->name }}</strong>?</p>
                 <p class="text-danger">This action cannot be undone. All associated questions will be disassociated from this question paper.</p>
             </div>
             <div class="modal-footer">

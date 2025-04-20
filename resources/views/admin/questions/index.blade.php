@@ -55,24 +55,28 @@
                         </div>
                         <div class="col-md-3 mb-3">
                             <label for="topic_filter" class="form-label">Topic</label>
-                            <select name="topic_id" id="topic_filter" class="form-select">
+                            <select name="topic_id" id="topic_filter" class="form-select" {{ !request('exam_id') ? 'disabled' : '' }}>
                                 <option value="">All Topics</option>
-                                @foreach($topics as $topic)
-                                    <option value="{{ $topic->id }}" {{ request('topic_id') == $topic->id ? 'selected' : '' }}>
-                                        {{ $topic->name }}
-                                    </option>
-                                @endforeach
+                                @if(request('exam_id'))
+                                    @foreach($topics as $topic)
+                                        <option value="{{ $topic->id }}" {{ request('topic_id') == $topic->id ? 'selected' : '' }}>
+                                            {{ $topic->name }}
+                                        </option>
+                                    @endforeach
+                                @endif
                             </select>
                         </div>
                         <div class="col-md-3 mb-3">
                             <label for="question_paper_filter" class="form-label">Question Paper</label>
-                            <select name="question_paper_id" id="question_paper_filter" class="form-select">
+                            <select name="question_paper_id" id="question_paper_filter" class="form-select" {{ !request('exam_id') ? 'disabled' : '' }}>
                                 <option value="">All Question Papers</option>
-                                @foreach($questionPapers as $paper)
-                                    <option value="{{ $paper->id }}" {{ request('question_paper_id') == $paper->id ? 'selected' : '' }}>
-                                        {{ $paper->title }}
-                                    </option>
-                                @endforeach
+                                @if(request('exam_id'))
+                                    @foreach($questionPapers as $paper)
+                                        <option value="{{ $paper->id }}" {{ request('question_paper_id') == $paper->id ? 'selected' : '' }}>
+                                            {{ $paper->name }}
+                                        </option>
+                                    @endforeach
+                                @endif
                             </select>
                         </div>
                         <div class="col-md-3 d-flex align-items-end mb-3">
@@ -110,7 +114,7 @@
                                         <td>{{ Str::limit($question->question_text, 50) }}</td>
                                         <td>{{ $question->exam->name ?? 'N/A' }}</td>
                                         <td>{{ $question->topic->name ?? 'N/A' }}</td>
-                                        <td>{{ $question->questionPaper->title ?? 'N/A' }}</td>
+                                        <td>{{ $question->questionPaper->name ?? 'N/A' }}</td> {{-- Use name instead of title --}}
                                         <td>{{ $question->images->count() }}</td>
                                         <td>
                                             <div class="btn-group" role="group">
@@ -169,4 +173,94 @@
     </div>
 </div>
 @endforeach
+@endsection
+
+@section('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const examSelect = document.getElementById('exam_filter');
+        const topicSelect = document.getElementById('topic_filter');
+        const questionPaperSelect = document.getElementById('question_paper_filter');
+        
+        // Function to load topics based on selected exam
+        function loadTopics(examId) {
+            if (!examId) {
+                topicSelect.innerHTML = '<option value="">All Topics</option>';
+                topicSelect.disabled = true;
+                return;
+            }
+            
+            fetch(`/admin/get-topics-by-exam/${examId}`)
+                .then(response => response.json())
+                .then(data => {
+                    topicSelect.innerHTML = '<option value="">All Topics</option>';
+                    data.forEach(topic => {
+                        const option = document.createElement('option');
+                        option.value = topic.id;
+                        option.textContent = topic.name;
+                        
+                        // Check if this topic was previously selected
+                        if (topic.id == "{{ request('topic_id') }}") {
+                            option.selected = true;
+                        }
+                        
+                        topicSelect.appendChild(option);
+                    });
+                    topicSelect.disabled = false;
+                })
+                .catch(error => {
+                    console.error('Error loading topics:', error);
+                    topicSelect.innerHTML = '<option value="">Error loading topics</option>';
+                    topicSelect.disabled = true;
+                });
+        }
+        
+        // Function to load question papers based on selected exam
+        function loadQuestionPapers(examId) {
+            if (!examId) {
+                questionPaperSelect.innerHTML = '<option value="">All Question Papers</option>';
+                questionPaperSelect.disabled = true;
+                return;
+            }
+            
+            fetch(`/admin/get-question-papers-by-exam/${examId}`)
+                .then(response => response.json())
+                .then(data => {
+                    questionPaperSelect.innerHTML = '<option value="">All Question Papers</option>';
+                    data.forEach(paper => {
+                        const option = document.createElement('option');
+                        option.value = paper.id;
+                        option.textContent = paper.name;
+                        
+                        // Check if this paper was previously selected
+                        if (paper.id == "{{ request('question_paper_id') }}") {
+                            option.selected = true;
+                        }
+                        
+                        questionPaperSelect.appendChild(option);
+                    });
+                    questionPaperSelect.disabled = false;
+                })
+                .catch(error => {
+                    console.error('Error loading question papers:', error);
+                    questionPaperSelect.innerHTML = '<option value="">Error loading question papers</option>';
+                    questionPaperSelect.disabled = true;
+                });
+        }
+        
+        // Event listener for exam select change
+        examSelect.addEventListener('change', function() {
+            const examId = this.value;
+            loadTopics(examId);
+            loadQuestionPapers(examId);
+        });
+        
+        // Initialize based on initial exam value (if any)
+        const initialExamId = examSelect.value;
+        if (initialExamId) {
+            loadTopics(initialExamId);
+            loadQuestionPapers(initialExamId);
+        }
+    });
+</script>
 @endsection

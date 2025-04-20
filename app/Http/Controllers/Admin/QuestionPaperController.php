@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Exam;
-use App\Models\Topic;
+// Removed Topic model import
 use App\Models\QuestionPaper;
 use App\Models\Question;
 use Illuminate\Http\Request;
@@ -25,27 +25,20 @@ class QuestionPaperController extends Controller
             $query->where('exam_id', $request->exam_id);
         }
         
-        if ($request->has('topic_id') && $request->topic_id) {
-            $topic = Topic::find($request->topic_id);
-            if ($topic) {
-                $query->whereHas('questions', function($q) use ($topic) {
-                    $q->where('topic_id', $topic->id);
-                });
-            }
-        }
+        // Removed topic_id filter logic
         
         // Get all question papers with their relationships and paginate them
         $questionPapers = $query->paginate(10);
         
-        // Get all exams and topics for the filters
+        // Get all exams for the filters
         $exams = Exam::all();
-        $topics = Topic::all();
+        // Removed topics fetching
         
         // Pass the data to the view
         return view('admin.question-papers.index', [
             'questionPapers' => $questionPapers,
             'exams' => $exams,
-            'topics' => $topics
+            // Removed topics from view data
         ]);
     }
 
@@ -54,8 +47,8 @@ class QuestionPaperController extends Controller
      */
     public function show(QuestionPaper $questionPaper)
     {
-        // Load the question paper with its relationships
-        $questionPaper->load(['exam', 'questions.topic']);
+        // Load the question paper with its relationships (removed questions.topic)
+        $questionPaper->load(['exam', 'questions']);
         
         // Pass the question paper data to the view
         return view('admin.question-papers.show', [
@@ -70,12 +63,12 @@ class QuestionPaperController extends Controller
     {
         // Get all exams for the dropdown
         $exams = Exam::all();
-        $topics = Topic::all();
+        // Removed topics fetching
         
         // Pass the data to the view
         return view('admin.question-papers.create', [
             'exams' => $exams,
-            'topics' => $topics
+            // Removed topics from view data
         ]);
     }
 
@@ -84,18 +77,18 @@ class QuestionPaperController extends Controller
      */
     public function edit(QuestionPaper $questionPaper)
     {
-        // Load the question paper with its relationships
-        $questionPaper->load(['exam', 'questions.topic']);
+        // Load the question paper with its relationships (removed questions.topic)
+        $questionPaper->load(['exam', 'questions']);
         
         // Get all exams for the dropdown
         $exams = Exam::all();
-        $topics = Topic::all();
+        // Removed topics fetching
         
         // Pass the data to the view
         return view('admin.question-papers.edit', [
             'questionPaper' => $questionPaper,
             'exams' => $exams,
-            'topics' => $topics
+            // Removed topics from view data
         ]);
     }
 
@@ -107,17 +100,22 @@ class QuestionPaperController extends Controller
         // Validate the request data
         $request->validate([
             'title' => 'required|string|max:255',
+            'year' => 'required|date_format:Y', // Validate as year format (YYYY)
             'exam_id' => 'required|exists:exams,id',
             'description' => 'nullable|string',
             'file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240', // Max 10MB
         ]);
 
         try {
+            // Format year as YYYY-01-01 for date column
+            $yearDate = $request->year . '-01-01';
+
             // Create the question paper record
             $questionPaper = QuestionPaper::create([
-                'title' => $request->title,
+                'name' => $request->title, // Map title to name
+                'year' => $yearDate, // Use formatted date string
                 'exam_id' => $request->exam_id,
-                'description' => $request->description,
+                // Removed topic_id assignment
             ]);
 
             // Handle file upload if provided
@@ -154,17 +152,21 @@ class QuestionPaperController extends Controller
         // Validate the request data
         $request->validate([
             'title' => 'required|string|max:255',
+            'year' => 'required|date_format:Y', // Validate as year format (YYYY)
             'exam_id' => 'required|exists:exams,id',
             'description' => 'nullable|string',
             'file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240', // Max 10MB
         ]);
 
         try {
+            // Format year as YYYY-01-01 for date column
+            $yearDate = $request->year . '-01-01';
+
             // Update the question paper record
             $questionPaper->update([
-                'title' => $request->title,
+                'name' => $request->title, // Map title to name
+                'year' => $yearDate, // Use formatted date string
                 'exam_id' => $request->exam_id,
-                'description' => $request->description,
             ]);
 
             // Handle file upload if provided

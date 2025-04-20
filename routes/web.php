@@ -75,6 +75,8 @@ Route::prefix('admin')->middleware('verifyadmintoken')->group(function () {
     Route::get('/questions/{question}/edit', [QuestionController::class, 'edit'])->name('admin.questions.edit');
     Route::put('/questions/{question}', [QuestionController::class, 'update'])->name('admin.questions.update');
     Route::delete('/questions/{question}', [QuestionController::class, 'destroy'])->name('admin.questions.destroy');
+    Route::get('/get-topics-by-exam/{exam}', [QuestionController::class, 'getTopicsByExam'])->name('admin.get-topics-by-exam');
+    Route::get('/get-question-papers-by-exam/{exam}', [QuestionController::class, 'getQuestionPapersByExam'])->name('admin.get-question-papers-by-exam');
     
     // Question Papers routes
     Route::get('/question-papers', [QuestionPaperController::class, 'index'])->name('admin.question-papers');
