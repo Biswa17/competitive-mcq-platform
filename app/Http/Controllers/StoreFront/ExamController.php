@@ -194,4 +194,70 @@ class ExamController extends Controller
         return $this->response($response, $status, $msg);
     }
 
+
+    /**
+     * Get exams by category ID.
+     */
+    public function getExamsByCategoryId(Request $request, $categoryId)
+    {
+        // Define validation rules (empty in this case, could add validation for categoryId existence if needed)
+        $rules = [];
+
+        // Validate the request data (though no specific data is expected in the request body here)
+        $validator = Validator::make($request->all(), $rules);
+
+        // Initialize response variables
+        $response = [];
+        $msg = '';
+        $status = 200;
+
+        // If validation fails (unlikely with empty rules, but good practice)
+        if ($validator->fails()) {
+            $response = $validator->errors();
+            $msg = 'Validation Errors';
+            $status = 422;
+        } else {
+            // Fetch exams associated with the given category ID
+            // Assuming a many-to-many relationship defined in Exam model named 'categories'
+            // Or querying through the pivot table directly if the relationship isn't set up
+            // Let's assume the relationship exists
+            $exams = Exam::whereHas('categories', function ($query) use ($categoryId) {
+                $query->where('categories.id', $categoryId);
+            })->get();
+
+
+            if ($exams->isNotEmpty()) {
+                 $response = [
+                    'exams' => $exams->map(function ($exam) {
+                        // You might want to format the exam data similarly to other methods
+                        return [
+                            'id' => $exam->id,
+                            'name' => $exam->name,
+                            'description' => $exam->description,
+                            'is_active' => $exam->is_active,
+                            // Add other relevant fields if needed
+                        ];
+                    })
+                ];
+                $msg = 'Exams for the category retrieved successfully';
+                $status = 200;
+            } else {
+                // Check if the category itself exists before saying no exams found
+                // This requires the Category model
+                // $categoryExists = \App\Models\Category::find($categoryId);
+                // if (!$categoryExists) {
+                //     $msg = 'Category not found';
+                //     $status = 404;
+                // } else {
+                    $response = [];
+                    $msg = 'No exams found for this category';
+                    $status = 200; // Or 404 if you prefer for no results linked to a valid category
+                // }
+            }
+        }
+
+        // Return final response at the end
+        return $this->response($response, $status, $msg);
+    }
+
 }

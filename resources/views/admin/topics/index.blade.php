@@ -40,15 +40,22 @@
             <div class="card">
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-hover">
+                        <table class="table table-hover" style="table-layout: fixed;"> {{-- Add table-layout: fixed --}}
+                            <colgroup> {{-- Define column widths --}}
+                                <col style="width: 5%;">
+                                <col style="width: 30%;">
+                                <col style="width: 30%;">
+                                <col style="width: 15%;">
+                                <col style="width: 20%;">
+                            </colgroup>
                             <thead>
                                 <tr>
                                     <th scope="col">#</th>
                                     <th scope="col">Name</th>
                                     <th scope="col">Related Exams</th>
-                                    <th scope="col">Question Papers</th>
-                                    <th scope="col">Questions</th>
-                                    <th scope="col">Actions</th>
+                                    {{-- Removed Question Papers Header --}}
+                                    <th scope="col" class="text-center">Questions</th> {{-- Center align count --}}
+                                    <th scope="col" class="text-center">Actions</th> {{-- Center align actions --}}
                                 </tr>
                             </thead>
                             <tbody>
@@ -63,17 +70,18 @@
                                             <span class="text-muted">No exams</span>
                                         @endforelse
                                     </td>
-                                    <td>{{ $topic->questionPapers->count() }}</td>
-                                    <td>{{ $topic->questions->count() }}</td>
-                                    <td>
+                                    {{-- Removed Question Papers Count --}}
+                                    <td class="text-center">{{ $topic->questions->count() }}</td> {{-- Center align count --}}
+                                    <td class="text-center"> {{-- Center align actions --}}
                                         <div class="btn-group" role="group">
-                                            <a href="{{ route('admin.topics.edit', $topic) }}" class="btn btn-sm btn-outline-primary">
+                                            <a href="{{ route('admin.topics.edit', $topic) }}" class="btn btn-sm btn-outline-primary" title="Edit">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-                                            <a href="{{ route('admin.topics.show', $topic) }}" class="btn btn-sm btn-outline-info">
+                                            </a>
+                                            <a href="{{ route('admin.topics.show', $topic) }}" class="btn btn-sm btn-outline-info" title="View">
                                                 <i class="fas fa-eye"></i>
                                             </a>
-                                            <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteTopicModal{{ $topic->id }}">
+                                            <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteTopicModal{{ $topic->id }}" title="Delete">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </div>
@@ -81,7 +89,7 @@
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="6" class="text-center">No topics found</td>
+                                    <td colspan="5" class="text-center">No topics found</td> {{-- Adjusted colspan --}}
                                 </tr>
                                 @endforelse
                             </tbody>

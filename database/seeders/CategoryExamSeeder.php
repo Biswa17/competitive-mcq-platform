@@ -3,42 +3,74 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use App\Models\Category;
 use App\Models\Exam;
-use Illuminate\Support\Facades\DB;
 
 class CategoryExamSeeder extends Seeder
 {
+    /**
+     * Run the database seeds.
+     *
+     * @return void
+     */
     public function run()
     {
-        // Clear the existing mappings
+        // Temporarily disable foreign key checks
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+
+        // Truncate the pivot table safely
+        // Assuming the pivot table name is 'category_exam_rel' based on common Laravel conventions
+        // and the migration file 2025_01_21_061803_create_category_exam_rel_table.php
         DB::table('category_exam_rel')->truncate();
 
-        // Define exam-category mappings
-        $mappings = [
-            'GATE CSE' => 'Postgraduate Engineering',
-            'JEE' => 'Undergraduate Engineering',
-            'NEET' => 'Undergraduate Medical',
-            'CAT' => 'MBA Entrance Exams',
-            'UPSC CSE' => 'UPSC Exams',
-        ];
+        // Re-enable foreign key checks
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
-        foreach ($mappings as $examName => $categoryName) {
-            // Fetch the exam ID
-            $exam = Exam::where('name', $examName)->first();
+        // Fetch Level 3 Categories
+        $gateCat = Category::where('name', 'GATE')->where('level', 3)->first();
+        $jeeMainCat = Category::where('name', 'JEE Main')->where('level', 3)->first();
+        $jeeAdvancedCat = Category::where('name', 'JEE Advanced')->where('level', 3)->first();
+        $neetUgCat = Category::where('name', 'NEET UG')->where('level', 3)->first();
+        $catCat = Category::where('name', 'CAT')->where('level', 3)->first();
+        $upscCseCat = Category::where('name', 'UPSC CSE')->where('level', 3)->first();
 
-            // Fetch the category ID
-            $category = Category::where('name', $categoryName)->first();
+        // Fetch Exams
+        $gateExam = Exam::where('name', 'GATE CSE')->first();
+        $jeeExam = Exam::where('name', 'JEE')->first();
+        $neetExam = Exam::where('name', 'NEET')->first();
+        $catExam = Exam::where('name', 'CAT')->first();
+        $upscExam = Exam::where('name', 'UPSC')->first();
 
-            // Ensure both exist before inserting
-            if ($exam && $category) {
-                DB::table('category_exam_rel')->insert([
-                    'exam_id' => $exam->id,
-                    'category_id' => $category->id,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            }
+        // Prepare data for pivot table insertion
+        $relations = [];
+
+        if ($gateCat && $gateExam) {
+            $relations[] = ['category_id' => $gateCat->id, 'exam_id' => $gateExam->id];
+        }
+        if ($jeeMainCat && $jeeExam) {
+            $relations[] = ['category_id' => $jeeMainCat->id, 'exam_id' => $jeeExam->id];
+        }
+        if ($jeeAdvancedCat && $jeeExam) {
+            // JEE Advanced also maps to the general 'JEE' exam in this seeder
+            $relations[] = ['category_id' => $jeeAdvancedCat->id, 'exam_id' => $jeeExam->id];
+        }
+        if ($neetUgCat && $neetExam) {
+            $relations[] = ['category_id' => $neetUgCat->id, 'exam_id' => $neetExam->id];
+        }
+        if ($catCat && $catExam) {
+            $relations[] = ['category_id' => $catCat->id, 'exam_id' => $catExam->id];
+        }
+        if ($upscCseCat && $upscExam) {
+            $relations[] = ['category_id' => $upscCseCat->id, 'exam_id' => $upscExam->id];
+        }
+
+        // Insert the relationships into the pivot table
+        if (!empty($relations)) {
+            DB::table('category_exam_rel')->insert($relations);
+            $this->command->info('Category-Exam relationships seeded successfully.');
+        } else {
+            $this->command->warn('No Category-Exam relationships were seeded. Check if categories and exams exist.');
         }
     }
 }

@@ -31,6 +31,7 @@ Route::group(['namespace' => '\App\Http\Controllers\StoreFront', 'prefix' => 'sf
     Route::get('get_exams', 'ExamController@getExams');
     Route::get('get_exam/{id}', 'ExamController@getExamById')->middleware('allow.guest'); // Apply AllowGuestMiddleware
     Route::get('get_popular_exams', 'ExamController@getPopularExams');
+    Route::get('exams/category/{categoryId}', 'ExamController@getExamsByCategoryId'); // Get exams by category ID
 
     Route::get('categories', 'CategoryController@index'); // Get all categories
     Route::get('categories/tree', 'CategoryController@getCategoryTree'); // Get category tree

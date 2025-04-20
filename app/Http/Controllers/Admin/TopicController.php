@@ -15,8 +15,8 @@ class TopicController extends Controller
      */
     public function index()
     {
-        // Get all topics with their relationships and paginate them
-        $topics = Topic::with(['exams', 'questionPapers', 'questions'])->paginate(10);
+        // Get all topics with their relationships and paginate them (removed questionPapers)
+        $topics = Topic::with(['exams', 'questions'])->paginate(10);
         
         // Get all exams for the modal dropdown
         $exams = Exam::all();
@@ -33,8 +33,8 @@ class TopicController extends Controller
      */
     public function show(Topic $topic)
     {
-        // Load the topic with its relationships
-        $topic->load(['exams', 'questionPapers', 'questions']);
+        // Load the topic with its relationships (removed questionPapers)
+        $topic->load(['exams', 'questions']);
         
         // Pass the topic data to the view
         return view('admin.topics.show', [
@@ -47,8 +47,8 @@ class TopicController extends Controller
      */
     public function edit(Topic $topic)
     {
-        // Load the topic with its relationships
-        $topic->load(['exams', 'questionPapers', 'questions']);
+        // Load the topic with its relationships (removed questionPapers)
+        $topic->load(['exams', 'questions']);
         
         // Get all exams for the dropdown
         $exams = Exam::all();
@@ -131,10 +131,7 @@ class TopicController extends Controller
     public function destroy(Topic $topic)
     {
         try {
-            // Check if topic has question papers
-            if ($topic->questionPapers()->count() > 0) {
-                return redirect()->route('admin.topics')->with('error', 'Cannot delete topic with question papers');
-            }
+            // Removed check for question papers
 
             // Check if topic has questions
             if ($topic->questions()->count() > 0) {

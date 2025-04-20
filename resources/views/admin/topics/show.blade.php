@@ -56,15 +56,8 @@
                     <div class="mt-4">
                         <h6 class="fw-bold">Statistics</h6>
                         <div class="row">
-                            <div class="col-md-4">
-                                <div class="card bg-light mb-3">
-                                    <div class="card-body text-center">
-                                        <h3 class="card-title">{{ $topic->questionPapers->count() }}</h3>
-                                        <p class="card-text">Question Papers</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
+                            {{-- Removed Question Papers Count Stat --}}
+                            <div class="col-md-6"> {{-- Adjusted column width --}}
                                 <div class="card bg-light mb-3">
                                     <div class="card-body text-center">
                                         <h3 class="card-title">{{ $topic->questions->count() }}</h3>
@@ -83,41 +76,7 @@
                         </div>
                     </div>
                     
-                    <div class="mt-4">
-                        <h6 class="fw-bold">Question Papers</h6>
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th scope="col">#</th>
-                                        <th scope="col">Title</th>
-                                        <th scope="col">Questions</th>
-                                        <th scope="col">Created At</th>
-                                        <th scope="col">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($topic->questionPapers as $index => $paper)
-                                    <tr>
-                                        <th scope="row">{{ $index + 1 }}</th>
-                                        <td>{{ $paper->title ?? 'Question Paper ' . ($index + 1) }}</td>
-                                        <td>{{ $paper->questions_count ?? 0 }}</td>
-                                        <td>{{ $paper->created_at ? $paper->created_at->format('Y-m-d') : 'N/A' }}</td>
-                                        <td>
-                                            <a href="#" class="btn btn-sm btn-outline-info">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                        </td>
-                                    </tr>
-                                    @empty
-                                    <tr>
-                                        <td colspan="5" class="text-center">No question papers found</td>
-                                    </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+                    {{-- Removed Question Papers Table Section --}}
                     
                     <div class="mt-4">
                         <h6 class="fw-bold">Recent Questions</h6>

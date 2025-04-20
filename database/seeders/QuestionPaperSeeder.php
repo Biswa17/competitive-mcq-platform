@@ -28,7 +28,7 @@ class QuestionPaperSeeder extends Seeder
             foreach ($years as $year) {
                 QuestionPaper::create([
                     'name' => 'GATE CSE ' . $year . ' Question Paper',
-                    'year' => $year,
+                    'year' => $year . '-01-01', // Format year as YYYY-MM-DD
                     'exam_id' => $gateCseExam->id,
                     'file_path' => null,  // Add file path if needed, leave as null for now
                 ]);

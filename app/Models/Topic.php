@@ -16,10 +16,7 @@ class Topic extends Model
         return $this->belongsToMany(Exam::class, 'exam_topic_rel');
     }
 
-    public function questionPapers()
-    {
-        return $this->hasMany(QuestionPaper::class);
-    }
+    // Removed questionPapers() relationship as topic_id is removed from question_papers table
 
     public function questions()
     {
