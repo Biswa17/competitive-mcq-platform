@@ -12,6 +12,7 @@
         "laravel/passport": "^10.4",
         "laravel/sanctum": "^2.11",
         "laravel/tinker": "^2.5",
+        "spatie/pdf-to-image": "^1.2",
         "tymon/jwt-auth": "^1.0@dev"
     },
     "require-dev": {
