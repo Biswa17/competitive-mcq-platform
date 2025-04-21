@@ -52,8 +52,10 @@
                             <label for="examCategories" class="form-label">Categories</label>
                             <select class="form-select" id="examCategories" name="categories[]" multiple>
                                 @foreach($categories as $category)
-                                    @if($category->level == 3)
-                                        <option value="{{ $category->id }}" {{ $exam->categories->contains($category->id) ? 'selected' : '' }}>{{ $category->name }}</option>
+                                    @if($category->level == 2 || $category->level == 3)
+                                        <option value="{{ $category->id }}" {{ $exam->categories->contains($category->id) ? 'selected' : '' }}>
+                                            {{ $category->level == 3 ? '-- ' : '' }}{{ $category->name }}
+                                        </option>
                                     @endif
                                 @endforeach
                             </select>

@@ -69,8 +69,51 @@ class CategoryController extends Controller
             // Get categories with subcategories
             $categories = Category::with('children')->whereNull('parent_id')->get();
 
-            if ($categories) {
-                $response = $categories;
+            if ($categories->isNotEmpty()) {
+                // Recursive function to load exams for level 2 categories
+                $loadExams = function ($categories) use (&$loadExams) {
+                    foreach ($categories as $category) {
+                        if ($category->level == 2) {
+                            $category->load('exams'); // Load exams relationship
+                        }
+                        if ($category->children->isNotEmpty()) {
+                            $loadExams($category->children); // Recurse for children
+                        }
+                    }
+                };
+
+                // Start the recursive loading
+                $loadExams($categories);
+
+                // Recursive function to transform the data and remove unwanted fields
+                $transformData = function ($categories) use (&$transformData) {
+                    return $categories->map(function ($category) use (&$transformData) {
+                        $data = [
+                            'id' => $category->id,
+                            'name' => $category->name,
+                            'description' => $category->description,
+                            'parent_id' => $category->parent_id,
+                            'level' => $category->level,
+                            'children' => $category->children->isNotEmpty() ? $transformData($category->children) : [],
+                        ];
+
+                        if ($category->relationLoaded('exams')) {
+                            $data['exams'] = $category->exams->map(function ($exam) {
+                                // Select only desired exam fields, excluding pivot
+                                return [
+                                    'id' => $exam->id,
+                                    'name' => $exam->name,
+                                    'description' => $exam->description,
+                                    // Add other exam fields if needed, but exclude pivot
+                                ];
+                            });
+                        }
+                        return $data;
+                    });
+                };
+
+                // Transform the final data structure
+                $response = $transformData($categories);
                 $msg = 'Category tree retrieved successfully';
                 $status = 200;
             } else {

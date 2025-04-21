@@ -52,104 +52,56 @@ class CategorySeeder extends Seeder
             'level' => 1, // Added level
         ]);
 
-        // --- Level 2 Categories ---
+        // --- Level 2 Categories (Exams) ---
 
-        // Engineering Subcategories (Level 2)
-        $engineering_pg = Category::create([
-            'name' => 'Postgraduate Engineering',
-            'description' => 'Exams for postgraduate engineering admissions',
-            'parent_id' => $engineering->id,
-            'level' => 2, // Added level
-        ]);
-
-        $engineering_ug = Category::create([
-            'name' => 'Undergraduate Engineering',
-            'description' => 'Exams for undergraduate engineering admissions',
-            'parent_id' => $engineering->id,
-            'level' => 2, // Added level
-        ]);
-
-        // Medical Subcategories (Level 2)
-        $medical_ug = Category::create([
-            'name' => 'Undergraduate Medical',
-            'description' => 'Exams for undergraduate medical admissions',
-            'parent_id' => $medical->id,
-            'level' => 2, // Added level
-        ]);
-        // Add more L2 medical categories if needed, e.g., Postgraduate Medical
-
-        // Management Subcategories (Level 2)
-        $management_mba = Category::create([
-            'name' => 'MBA Entrance Exams',
-            'description' => 'Exams for MBA admissions',
-            'parent_id' => $management->id,
-            'level' => 2, // Added level
-        ]);
-        // Add more L2 management categories if needed
-
-        // Civil Services Subcategories (Level 2)
-        $civil_services_upsc = Category::create([
-            'name' => 'UPSC Exams',
-            'description' => 'UPSC-conducted civil service exams',
-            'parent_id' => $civil_services->id,
-            'level' => 2, // Added level
-        ]);
-        // Add more L2 civil services categories if needed
-
-        // --- Level 3 Categories ---
-
-        // Postgraduate Engineering Sub-subcategories (Level 3)
-        $gate = Category::create([ // Store in variable
+        // Engineering Exams (Level 2)
+        $gate = Category::create([
             'name' => 'GATE',
             'description' => 'Graduate Aptitude Test in Engineering',
-            'parent_id' => $engineering_pg->id,
-            'level' => 3, // Added level
+            'parent_id' => $engineering->id, // Parent is Level 1 Engineering
+            'level' => 2, // Now Level 2
         ]);
-        // Add more L3 PG Engineering categories if needed (e.g., ESE)
-
-        // Undergraduate Engineering Sub-subcategories (Level 3)
-        $jeeMain = Category::create([ // Store in variable
+        $jeeMain = Category::create([
             'name' => 'JEE Main',
             'description' => 'Joint Entrance Examination Main',
-            'parent_id' => $engineering_ug->id,
-            'level' => 3, // Added level
+            'parent_id' => $engineering->id, // Parent is Level 1 Engineering
+            'level' => 2, // Now Level 2
         ]);
-
-        $jeeAdvanced = Category::create([ // Store in variable
+        $jeeAdvanced = Category::create([
             'name' => 'JEE Advanced',
             'description' => 'Joint Entrance Examination Advanced',
-            'parent_id' => $engineering_ug->id,
-            'level' => 3, // Added level
+            'parent_id' => $engineering->id, // Parent is Level 1 Engineering
+            'level' => 2, // Now Level 2
         ]);
-        // Add more L3 UG Engineering categories if needed (e.g., BITSAT)
+        // Add more L2 Engineering exams if needed
 
-        // Undergraduate Medical Sub-subcategories (Level 3)
-        $neetUg = Category::create([ // Store in variable
+        // Medical Exams (Level 2)
+        $neetUg = Category::create([
             'name' => 'NEET UG',
             'description' => 'National Eligibility cum Entrance Test for UG',
-            'parent_id' => $medical_ug->id,
-            'level' => 3, // Added level
+            'parent_id' => $medical->id, // Parent is Level 1 Medical
+            'level' => 2, // Now Level 2
         ]);
-        // Add more L3 UG Medical categories if needed (e.g., AIIMS UG - though now part of NEET)
+        // Add more L2 Medical exams if needed
 
-        // MBA Entrance Exams Sub-subcategories (Level 3)
-        $cat = Category::create([ // Store in variable
+        // Management Exams (Level 2)
+        $cat = Category::create([
             'name' => 'CAT',
             'description' => 'Common Admission Test for management courses',
-            'parent_id' => $management_mba->id,
-            'level' => 3, // Added level
+            'parent_id' => $management->id, // Parent is Level 1 Management
+            'level' => 2, // Now Level 2
         ]);
-        // Add more L3 MBA categories if needed (e.g., XAT, SNAP)
+        // Add more L2 Management exams if needed
 
-        // UPSC Exams Sub-subcategories (Level 3)
-        $upscCse = Category::create([ // Store in variable
+        // Civil Services Exams (Level 2)
+        $upscCse = Category::create([
             'name' => 'UPSC CSE',
             'description' => 'Union Public Service Commission Civil Services Examination',
-            'parent_id' => $civil_services_upsc->id,
-            'level' => 3, // Added level
+            'parent_id' => $civil_services->id, // Parent is Level 1 Civil Services
+            'level' => 2, // Now Level 2
         ]);
-        // Add more L3 UPSC categories if needed (e.g., UPSC CDS, UPSC NDA)
+        // Add more L2 Civil Services exams if needed
 
-        $this->command->info('Categories seeded successfully with 3 levels.');
+        $this->command->info('Categories seeded successfully with 2 levels.');
     }
 }

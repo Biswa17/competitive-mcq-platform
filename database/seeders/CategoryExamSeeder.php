@@ -27,16 +27,16 @@ class CategoryExamSeeder extends Seeder
         // Re-enable foreign key checks
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
-        // Fetch Level 3 Categories
-        $gateCat = Category::where('name', 'GATE')->where('level', 3)->first();
-        $jeeMainCat = Category::where('name', 'JEE Main')->where('level', 3)->first();
-        $jeeAdvancedCat = Category::where('name', 'JEE Advanced')->where('level', 3)->first();
-        $neetUgCat = Category::where('name', 'NEET UG')->where('level', 3)->first();
-        $catCat = Category::where('name', 'CAT')->where('level', 3)->first();
-        $upscCseCat = Category::where('name', 'UPSC CSE')->where('level', 3)->first();
+        // Fetch Level 2 Categories (which now represent exams)
+        $gateCat = Category::where('name', 'GATE')->where('level', 2)->first();
+        $jeeMainCat = Category::where('name', 'JEE Main')->where('level', 2)->first();
+        $jeeAdvancedCat = Category::where('name', 'JEE Advanced')->where('level', 2)->first();
+        $neetUgCat = Category::where('name', 'NEET UG')->where('level', 2)->first();
+        $catCat = Category::where('name', 'CAT')->where('level', 2)->first();
+        $upscCseCat = Category::where('name', 'UPSC CSE')->where('level', 2)->first();
 
         // Fetch Exams
-        $gateExam = Exam::where('name', 'GATE CSE')->first();
+        $gateExam = Exam::where('name', 'GATE CSE')->first(); // Assuming GATE CSE exam maps to GATE category
         $jeeExam = Exam::where('name', 'JEE')->first();
         $neetExam = Exam::where('name', 'NEET')->first();
         $catExam = Exam::where('name', 'CAT')->first();
