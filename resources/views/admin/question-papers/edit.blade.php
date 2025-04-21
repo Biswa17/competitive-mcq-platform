@@ -107,8 +107,9 @@
                                 <div class="mt-2">
                                     <div class="d-flex align-items-center">
                                         <span class="me-2">Current file:</span>
-                                        <a href="{{ asset('storage/' . $questionPaper->file_path) }}" target="_blank" class="btn btn-sm btn-outline-info">
-                                            <i class="fas fa-file-download me-1"></i> View File
+                                        {{-- Changed href to use the new view-file route --}}
+                                        <a href="{{ route('admin.question-papers.view-file', $questionPaper) }}" target="_blank" class="btn btn-sm btn-outline-info">
+                                            <i class="fas fa-file-alt me-1"></i> View File {{-- Changed icon --}}
                                         </a>
                                     </div>
                                     <div class="form-text">Uploading a new file will replace the current one.</div>

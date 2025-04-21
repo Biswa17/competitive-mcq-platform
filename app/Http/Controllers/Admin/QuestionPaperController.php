@@ -272,4 +272,35 @@ class QuestionPaperController extends Controller
             return redirect()->route('admin.question-papers.show', $questionPaper)->with('error', 'Failed to remove question: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Serve the question paper file for viewing.
+     */
+    public function viewFile(QuestionPaper $questionPaper)
+    {
+        // Check if the question paper has a file path
+        if (!$questionPaper->file_path) {
+            return redirect()->back()->with('error', 'No file associated with this question paper.');
+        }
+
+        // Construct the full path within the storage/app/public directory
+        $filePath = storage_path('app/public/' . $questionPaper->file_path);
+
+        // Check if the file exists
+        if (!Storage::disk('public')->exists($questionPaper->file_path)) {
+            return redirect()->back()->with('error', 'File not found.');
+        }
+
+        // Determine the MIME type (use stored type if available, otherwise guess)
+        $mimeType = $questionPaper->file_type ?: Storage::disk('public')->mimeType($questionPaper->file_path);
+
+        // Set headers to display the file inline
+        $headers = [
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => 'inline; filename="' . basename($filePath) . '"',
+        ];
+
+        // Return the file response
+        return response()->file($filePath, $headers);
+    }
 }

@@ -88,7 +88,8 @@ Route::prefix('admin')->middleware('verifyadmintoken')->group(function () {
     Route::delete('/question-papers/{questionPaper}', [QuestionPaperController::class, 'destroy'])->name('admin.question-papers.destroy');
     Route::post('/question-papers/{questionPaper}/add-questions', [QuestionPaperController::class, 'addQuestions'])->name('admin.question-papers.add-questions');
     Route::delete('/question-papers/{questionPaper}/questions/{question}', [QuestionPaperController::class, 'removeQuestion'])->name('admin.question-papers.remove-question');
-    
+    Route::get('/question-papers/{questionPaper}/view-file', [QuestionPaperController::class, 'viewFile'])->name('admin.question-papers.view-file'); // Added route for viewing file
+
     // Users routes
     Route::get('/users', [UserController::class, 'index'])->name('admin.users');
     Route::get('/users/create', [UserController::class, 'create'])->name('admin.users.create');

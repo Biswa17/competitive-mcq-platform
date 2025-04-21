@@ -101,8 +101,9 @@
                             @if($questionPaper->file_path)
                                 <h6 class="fw-bold">Attached File</h6>
                                 <div class="d-grid gap-2">
-                                    <a href="{{ asset('storage/' . $questionPaper->file_path) }}" target="_blank" class="btn btn-outline-primary">
-                                        <i class="fas fa-file-download me-2"></i> View/Download File
+                                    {{-- Changed href to use the new view-file route --}}
+                                    <a href="{{ route('admin.question-papers.view-file', $questionPaper) }}" target="_blank" class="btn btn-outline-primary">
+                                        <i class="fas fa-file-alt me-2"></i> View File {{-- Changed icon and text --}}
                                     </a>
                                 </div>
                             @endif

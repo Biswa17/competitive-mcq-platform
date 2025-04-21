@@ -102,8 +102,9 @@
                                         </td>
                                         <td>
                                             @if($paper->file_path)
-                                                <a href="{{ asset('storage/' . $paper->file_path) }}" target="_blank" class="btn btn-sm btn-outline-info">
-                                                    <i class="fas fa-file-download"></i> View
+                                                {{-- Changed href to use the new view-file route --}}
+                                                <a href="{{ route('admin.question-papers.view-file', $paper) }}" target="_blank" class="btn btn-sm btn-outline-info">
+                                                    <i class="fas fa-file-alt"></i> View {{-- Changed icon --}}
                                                 </a>
                                             @else
                                                 <span class="text-muted">No file</span>

@@ -9,7 +9,7 @@ class QuestionPaper extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'year', 'exam_id', 'file_path', 'is_sync'];
+    protected $fillable = ['name', 'year', 'exam_id', 'file_path', 'is_sync', 'file_type']; // Added file_type
 
     protected $casts = [
         'year' => 'date:Y', // Cast year to date, format to only year 'Y'
