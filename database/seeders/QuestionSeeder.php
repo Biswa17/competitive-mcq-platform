@@ -2,141 +2,195 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use App\Models\Exam; // Import the Exam model
 use App\Models\Question;
 use App\Models\Topic;
-use App\Models\QuestionPaper;
-use Faker\Factory as Faker;
+use Illuminate\Support\Facades\Http; // Use Laravel's HTTP client
+use Illuminate\Support\Facades\Log; // Use Laravel's Log facade
+use Illuminate\Support\Facades\DB; // For potential future use like transactions or checks
 
 class QuestionSeeder extends Seeder
 {
-    public function run()
+    public function run(): void
     {
-        
-        // // Temporarily disable foreign key checks
-        // \DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        $this->command->info('Starting Question Seeder...');
 
-        // // Truncate the table safely
-        // Question::truncate();
+        // Get all exams
+        $exams = Exam::with('topics')->get(); // Eager load topics for efficiency
 
-        // // Re-enable foreign key checks
-        // \DB::statement('SET FOREIGN_KEY_CHECKS=1;');
-
-        // Get all topics related to exam_id = 1
-        $topics = Topic::whereHas('exams', function ($query) {
-            $query->where('exams.id', 1);  // Specify table name to avoid ambiguity
-        })->get();
-        
-
-
-        // Get question papers (for GATE CSE)
-        // $questionPapers = QuestionPaper::where('exam_id', 1)->get();  // Assuming GATE CSE has exam_id = 1
-
-        // Initialize Faker for generating random data
-        $faker = Faker::create();
-
-        // Define possible options
-        $options = ['A', 'B', 'C', 'D'];
-
-        // Loop through topics to create questions
-        foreach ($topics as $topic) {
-            $questions = $this->get_question($topic->name);
-            foreach ($questions as $questionData) {
-                // Check if the question already exists
-                $exists = Question::where('question_text', $questionData['question_text'])
-                ->where('topic_id', $topic->id)
-                ->exists();
-
-                if (!$exists) {
-                    Question::create([
-                        'question_text' => $questionData['question_text'],
-                        'option_a' => $questionData['option_a'],
-                        'option_b' => $questionData['option_b'],
-                        'option_c' => $questionData['option_c'],
-                        'option_d' => $questionData['option_d'],
-                        'correct_option' => $questionData['correct_option'],
-                        'topic_id' => $topic->id,
-                        'question_paper_id' => null,
-                    ]);
-                }
-            }
+        if ($exams->isEmpty()) {
+            $this->command->warn('No exams found in the database. Exiting Question Seeder.');
+            return;
         }
-        
 
-        // // Loop through question papers to create questions
-        // foreach ($questionPapers as $paper) {
-        //     for ($i = 1; $i <= 20; $i++) {  // Generate 50 questions per question paper
-        //         $questionData = [
-        //             'question_text' => $faker->sentence(10),  // Random sentence for question text
-        //             'option_a' => $faker->word,
-        //             'option_b' => $faker->word,
-        //             'option_c' => $faker->word,
-        //             'option_d' => $faker->word,
-        //             'correct_option' => $options[array_rand($options)],  // Randomly pick the correct option
-        //             'topic_id' => null,  // No topic assigned, only question paper based questions
-        //             'question_paper_id' => $paper->id,  // Linking question to the current question paper
-        //         ];
+        // Loop through each exam
+        foreach ($exams as $exam) {
+            $this->command->info("Processing Exam: {$exam->name} (ID: {$exam->id})");
 
-        //         // Create the question
-        //         Question::create($questionData);
-        //     }
-        // }
+            $topics = $exam->topics; // Access eager-loaded topics
+
+            if ($topics->isEmpty()) {
+                $this->command->warn("  No topics found for Exam '{$exam->name}'. Skipping.");
+                continue;
+            }
+
+            // Loop through topics for the current exam
+            foreach ($topics as $topic) {
+                $this->command->info("  Processing Topic: {$topic->name} (ID: {$topic->id})");
+
+                try {
+                    $generatedQuestions = $this->getQuestionsFromApi($topic->name);
+
+                    if (empty($generatedQuestions)) {
+                        $this->command->warn("    No questions generated or retrieved for Topic '{$topic->name}'.");
+                        continue; // Move to the next topic
+                    }
+
+                    $this->processGeneratedQuestions($generatedQuestions, $topic, $exam);
+
+                } catch (\Exception $e) {
+                    $this->command->error("    Error processing Topic '{$topic->name}' (ID: {$topic->id}). Error: " . $e->getMessage());
+                    Log::error("Error seeding questions for Topic ID {$topic->id}, Exam ID {$exam->id}: " . $e->getMessage(), ['exception' => $e]);
+                } // End try-catch block
+            } // End topic loop
+        } // End exam loop
+
+        $this->command->info('Question Seeder finished.');
     }
 
-
-    public function get_question($topic_name)
+    /**
+     * Process the questions generated by the API for a specific topic and exam.
+     *
+     * @param array $generatedQuestions
+     * @param Topic $topic
+     * @param Exam $exam
+     * @return void
+     */
+    private function processGeneratedQuestions(array $generatedQuestions, Topic $topic, Exam $exam): void
     {
-        $apiKey = env('GEMINI_API_KEY', 'WRONG_API_KEY');
-        $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$apiKey";
+        foreach ($generatedQuestions as $questionData) {
+            // Validate required fields from API response
+            if (!isset($questionData['question_text'], $questionData['option_a'], $questionData['option_b'], $questionData['option_c'], $questionData['option_d'], $questionData['correct_option'])) {
+                $this->command->error("    Skipping invalid question data for Topic '{$topic->name}'. Missing fields.");
+                Log::warning("Invalid question data received from API for topic '{$topic->name}': ", $questionData);
+                continue; // Skip this question data
+            }
 
-        $promt = "Generate 10 multiple-choice questions (MCQs) on the topic '$topic_name'. 
-                Provide the response in JSON format with the structure:
-                [
-                    {
-                        'question_text': 'Question?',
-                        'option_a': 'Option A',
-                        'option_b': 'Option B',
-                        'option_c': 'Option C',
-                        'option_d': 'Option D',
-                        'correct_option': 'A' (one of A, B, C, or D)
-                    }
-                ]";
+            // Check if the question already exists for this specific topic and exam
+            $exists = Question::where('question_text', $questionData['question_text'])
+                ->where('topic_id', $topic->id)
+                ->where('exam_id', $exam->id)
+                ->exists();
+
+            if (!$exists) {
+                Question::create([
+                    'question_text' => $questionData['question_text'],
+                    'option_a' => $questionData['option_a'],
+                    'option_b' => $questionData['option_b'],
+                    'option_c' => $questionData['option_c'],
+                    'option_d' => $questionData['option_d'],
+                    'correct_option' => $questionData['correct_option'],
+                    'topic_id' => $topic->id,
+                    'exam_id' => $exam->id,
+                    'question_paper_id' => null, // Keep this null for topic-based questions
+                ]);
+                $this->command->info("      Created question for Topic '{$topic->name}', Exam '{$exam->name}'");
+            } else {
+                 $this->command->line("      Question already exists for Topic '{$topic->name}', Exam '{$exam->name}'. Skipping.");
+            }
+        }
+    }
+
+    /**
+     * Fetches questions from the Generative Language API for a given topic.
+     * Includes basic retry logic.
+     *
+     * @param string $topicName
+     * @param int $retryCount
+     * @return array|null
+     */
+    private function getQuestionsFromApi(string $topicName, int $retryCount = 3): ?array
+    {
+        $apiKey = env('GEMINI_API_KEY');
+        if (!$apiKey) {
+            $this->command->error('GEMINI_API_KEY is not set in the .env file.');
+            Log::error('GEMINI_API_KEY is not set.');
+            return null; // Cannot proceed without API key
+        }
+
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-04-17:generateContent?key={$apiKey}"; // Updated model
+
+        $prompt = "Generate 10 multiple-choice questions (MCQs) on the topic '$topicName'.
+                 Provide the response ONLY as a valid JSON array adhering strictly to this structure:
+                 [
+                     {
+                         \"question_text\": \"<The question text>\",
+                         \"option_a\": \"<Option A text>\",
+                         \"option_b\": \"<Option B text>\",
+                         \"option_c\": \"<Option C text>\",
+                         \"option_d\": \"<Option D text>\",
+                         \"correct_option\": \"<A, B, C, or D>\"
+                     }
+                 ]
+                 Do not include any introductory text, explanations, markdown formatting (like ```json), or anything outside the JSON array itself.";
 
         $postData = [
-            "contents" => [
-                [
-                    "parts" => [
-                        [
-                            "text" => $promt
-                        ]
-                    ]
-                ]
+            "contents" => [["parts" => [["text" => $prompt]]]],
+            // Optional: Add safety settings if needed
+            // "safetySettings" => [ ... ],
+            "generationConfig" => [
+                "responseMimeType" => "application/json", // Request JSON directly
+                "temperature" => 0.7 // Adjust creativity/predictability
             ]
         ];
 
-        $response = call_curl($url, 'POST', $postData);
+        for ($attempt = 1; $attempt <= $retryCount; $attempt++) {
+            try {
+                $response = Http::timeout(60)->post($url, $postData); // Use Laravel HTTP client, 60s timeout
 
-        if ($response['status'] === 200 && isset($response['response']['candidates'][0]['content']['parts'][0]['text'])) {
-            $aiGeneratedText = trim($response['response']['candidates'][0]['content']['parts'][0]['text']);
+                if ($response->successful() && $response->json('candidates.0.content.parts.0.text')) {
+                    $aiGeneratedText = trim($response->json('candidates.0.content.parts.0.text'));
 
-            $aiGeneratedText = preg_replace('/<pre>|<\/pre>|```json|```/', '', $aiGeneratedText);
-            // Convert AI response to JSON format
-            $questions = json_decode($aiGeneratedText, true);
-            
-            if (json_last_error() === JSON_ERROR_NONE) {
-                return $questions;
-            } else {
-                print_r("JSON decoding failed. Retrying... Response: " . json_encode($response));
-                sleep(10);
-                return $this->get_question($topic_name);
+                    // Basic cleanup, though responseMimeType should help
+                    $aiGeneratedText = preg_replace('/^```json\s*|```\s*$/', '', $aiGeneratedText);
+
+                    $questions = json_decode($aiGeneratedText, true);
+
+                    if (json_last_error() === JSON_ERROR_NONE && is_array($questions)) {
+                        $this->command->info("      Successfully retrieved and decoded questions for '{$topicName}'.");
+                        return $questions;
+                    } else {
+                        $this->command->warn("      JSON decoding failed for '{$topicName}'. Attempt {$attempt}/{$retryCount}. Error: " . json_last_error_msg());
+                        Log::warning("JSON decoding failed for topic '{$topicName}'.", [
+                            'attempt' => $attempt,
+                            'error' => json_last_error_msg(),
+                            'raw_response' => $aiGeneratedText
+                        ]);
+                    }
+                } else {
+                    $this->command->warn("      API request failed for '{$topicName}'. Status: {$response->status()}. Attempt {$attempt}/{$retryCount}.");
+                    Log::warning("API request failed for topic '{$topicName}'.", [
+                        'attempt' => $attempt,
+                        'status' => $response->status(),
+                        'response_body' => $response->body()
+                    ]);
+                }
+
+            } catch (\Illuminate\Http\Client\ConnectionException $e) {
+                 $this->command->error("      Connection error during API call for '{$topicName}'. Attempt {$attempt}/{$retryCount}. Error: " . $e->getMessage());
+                 Log::error("Connection error for topic '{$topicName}'.", ['attempt' => $attempt, 'exception' => $e]);
+            } catch (\Exception $e) {
+                 $this->command->error("      An unexpected error occurred during API call for '{$topicName}'. Attempt {$attempt}/{$retryCount}. Error: " . $e->getMessage());
+                 Log::error("Unexpected error during API call for topic '{$topicName}'.", ['attempt' => $attempt, 'exception' => $e]);
             }
-        } else {
-            print_r("Unable to fetch data. Retrying... Response: " . json_encode($response));
-            sleep(10);
-            return $this->get_question($topic_name);
+
+            if ($attempt < $retryCount) {
+                $this->command->line("      Retrying in 10 seconds...");
+                sleep(10); // Wait before retrying
+            }
         }
+
+        $this->command->error("      Failed to retrieve valid questions for '{$topicName}' after {$retryCount} attempts.");
+        return null; // Return null after all retries fail
     }
-
-
-
-
 }

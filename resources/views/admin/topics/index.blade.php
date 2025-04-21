@@ -64,7 +64,7 @@
                                     <th scope="row">{{ $topics->firstItem() + $index }}</th>
                                     <td>{{ $topic->name }}</td>
                                     <td>
-                                        @forelse($topic->exams as $exam)
+                                        @forelse($topic->exams->unique('id') as $exam)
                                             <span class="badge bg-primary">{{ $exam->name }}</span>
                                         @empty
                                             <span class="text-muted">No exams</span>
