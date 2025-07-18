@@ -50,7 +50,9 @@ class ProcessQuestionPapers extends Command
                 return Command::FAILURE;
             }
         } else {
-            $papersToProcess = QuestionPaper::where('is_sync', false)->get();
+            $papersToProcess = QuestionPaper::where('is_sync', false)
+                                        ->whereNotNull('file_path')
+                                        ->get();
             $count = $papersToProcess->count();
             if ($count === 0) {
                 $this->info('No unsynced question papers found to process.');

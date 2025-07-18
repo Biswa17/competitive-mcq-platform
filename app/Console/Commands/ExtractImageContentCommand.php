@@ -72,7 +72,7 @@ class ExtractImageContentCommand extends Command
                 Log::error("Error processing image {$filePath} for QP ID {$questionPaperId}: " . $e->getMessage());
                 $errorOccurred = true;
                 // Decide if you want to stop processing or continue with other images
-                // continue;
+                continue;
             }
         }
 
